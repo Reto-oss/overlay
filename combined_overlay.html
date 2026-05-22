@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: transparent; font-family: 'M PLUS Rounded 1c', sans-serif; width: 420px; padding: 6px; overflow: hidden; }
+
+  /* ===== ヘッダー ===== */
+  .header { display: flex; align-items: center; justify-content: center; padding: 4px 12px; margin-bottom: 6px; background: #000; border: 1px solid #00ffff; border-radius: 8px; height: 48px; box-shadow: 0 0 12px #00ffff55; overflow: hidden; position: relative; }
+  .marquee-wrap { flex: 1; overflow: visible; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; }
+  .marquee-line { display: flex; align-items: center; gap: 4px; height: 100%; flex-wrap: nowrap; }
+  .marquee-char {
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    text-shadow: 0 0 6px currentColor;
+    opacity: 0;
+    transform: translateY(10px) scale(0.5);
+    animation: charPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes charPop {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.5) rotate(-8deg); }
+    60%  { opacity: 1; transform: translateY(0) scale(1.05) rotate(3deg); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+  }
+  .header::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, #00ffff88, transparent); animation: scan 2.5s linear infinite; pointer-events: none; }
+  @keyframes scan { from{top:0} to{top:48px} }
+
+  /* ===== 進行度メーター ===== */
+  .progress-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px; padding: 6px 10px;
+    background: linear-gradient(90deg, rgba(0,20,25,0.85), rgba(0,40,50,0.7), rgba(0,20,25,0.85));
+    border: 1px solid #00ffff44;
+    border-radius: 8px;
+    box-shadow: 0 0 6px #00ffff22 inset;
+  }
+  .progress-label {
+    font-size: 13px; font-weight: 900;
+    color: #00ffff;
+    text-shadow: 0 0 4px #00ffff88;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    min-width: 70px;
+  }
+  .progress-bar-bg {
+    flex: 1; height: 12px;
+    background: #ffffff10;
+    border: 1px solid #ffffff15;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ffff, #00ff88, #ffd700);
+    border-radius: 6px;
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 6px #00ffffaa;
+    position: relative;
+  }
+  .progress-bar-fill::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: shine 2.5s linear infinite;
+  }
+  @keyframes shine { from{transform:translateX(-100%)} to{transform:translateX(200%)} }
+  .progress-percent {
+    font-size: 12px; font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 4px #ffd70088;
+    flex-shrink: 0;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ===== メインレイアウト ===== */
+  .main-row { display: flex; gap: 6px; align-items: flex-start; }
+  .sidebar { width: 140px; flex-shrink: 0; }
+  .like-section { background: linear-gradient(135deg, rgba(0,0,0,0.85), rgba(20,0,25,0.9)); border: 1px solid #ff00ff33; border-radius: 10px; padding: 7px 8px; }
+  .section-title { font-size: 10px; font-weight: 900; letter-spacing: 1px; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #ffffff22; }
+  .section-title.magenta { text-shadow: 0 0 4px #ff00ff; color: #ff00ff; }
+  .like-total { font-size: 9px; font-weight: 700; color: #ff00ff88; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #ffffff22; text-align: right; }
+  .like-row { display: flex; align-items: center; gap: 4px; padding: 3px 0; }
+  .like-rank { font-size: 11px; min-width: 18px; text-align: center; font-weight: 900; flex-shrink: 0; }
+  .like-row.top1 .like-rank { color: #ffd700; text-shadow: 0 0 6px #ffd700; }
+  .like-row.top2 .like-rank { color: #c0c0c0; text-shadow: 0 0 4px #c0c0c0; }
+  .like-row.top3 .like-rank { color: #cd7f32; text-shadow: 0 0 4px #cd7f32; }
+  .like-row.other .like-rank { color: #ffffff44; font-size: 9px; }
+  .like-avatar { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; background: #ffffff10; border: 1px solid #ffffff22; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; color: #ffffff66; }
+  .like-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .like-row.top1 .like-avatar { border-color: #ffd70088; box-shadow: 0 0 4px #ffd70066; }
+  .like-row.top2 .like-avatar { border-color: #c0c0c088; }
+  .like-row.top3 .like-avatar { border-color: #cd7f3288; }
+  .like-name { flex: 1; font-size: 10px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .like-count { font-size: 10px; font-weight: 900; color: #ff00ff; min-width: 22px; text-align: right; flex-shrink: 0; }
+  .like-row.top1 .like-count { color: #ffd700; }
+
+  /* ===== ギフトグリッド ===== */
+  .grid-wrap { flex: 1; position: relative; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .gift-card { position: relative; background: linear-gradient(160deg, rgba(0,0,0,0.8), rgba(0,10,20,0.85)); border: 1px solid #ffffff15; border-radius: 8px; padding: 7px 4px 5px; text-align: center; overflow: hidden; }
+  .gift-card.lit { border-color: #00ffff; background: linear-gradient(160deg, rgba(0,20,25,0.9), rgba(0,40,50,0.85)); animation: litPulse 3s ease-in-out infinite; }
+  @keyframes litPulse { 0%,100%{box-shadow:0 0 6px #00ffff55} 50%{box-shadow:0 0 12px #00ffff88} }
+  .gift-card.just-lit { animation: litBurst 0.6s ease forwards, litPulse 3s 0.6s infinite; }
+  @keyframes litBurst { 0%{transform:scale(1)} 40%{transform:scale(1.12);box-shadow:0 0 20px #00ffff} 100%{transform:scale(1)} }
+  .lit-star { position: absolute; top: 2px; right: 2px; font-size: 9px; animation: starSpin 2s linear infinite; }
+  @keyframes starSpin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+  .gift-img-wrap { width: 42px; height: 42px; margin: 0 auto 3px; position: relative; }
+  .gift-img { width: 42px; height: 42px; object-fit: contain; display: block; border-radius: 6px; }
+  .gift-card:not(.lit) .gift-img { filter: grayscale(90%) brightness(0.45); }
+  .gift-placeholder { width: 42px; height: 42px; border-radius: 6px; background: #ffffff08; border: 1px dashed #ffffff22; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; position: absolute; top: 0; left: 0; }
+  .gift-card:not(.lit) .gift-placeholder { opacity: 0.3; }
+  .gift-name { font-size: 9px; font-weight: 800; color: #fff; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gift-card:not(.lit) .gift-name { color: #ffffff55; }
+  .progress-wrap { width: 100%; height: 2px; background: #ffffff0f; border-radius: 2px; overflow: hidden; margin-bottom: 2px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg,#00ffff,#00ff88); border-radius: 2px; transition: width 0.6s ease; }
+  .gift-card:not(.lit) .progress-fill { background: #ffffff22; }
+  .gift-status { font-size: 8px; font-weight: 700; }
+  .gift-card.lit .gift-status { color: #00ffff; }
+  .gift-card:not(.lit) .gift-status { color: #ffffff44; }
+
+  /* ===== 貢献者表示 ===== */
+  .gift-contributor {
+    font-size: 8px; font-weight: 800;
+    color: #ffd700;
+    text-shadow: 0 0 3px #ffd70066;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    min-height: 10px;
+    padding: 1px 2px 0;
+  }
+  .gift-card:not(.lit) .gift-contributor { visibility: hidden; }
+
+  /* ===== 空状態 ===== */
+  .empty-msg { color: #ffffff22; font-size: 10px; font-weight: 700; text-align: center; padding: 6px; }
+  .grid-empty {
+    grid-column: 1 / -1;
+    color: #ffffff33; font-size: 11px; font-weight: 700;
+    text-align: center; padding: 24px 8px; letter-spacing: 1px;
+    border: 1px dashed #ffffff11; border-radius: 8px;
+  }
+
+  /* ===== ハートパーティクル ===== */
+  .particle-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 100;
+  }
+  .heart-particle {
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 4px #ff00ff77);
+    animation: heartFly 1.2s ease-out forwards;
+  }
+  @keyframes heartFly {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); }
+    15%  { opacity: 1; transform: translate(-50%, -50%) scale(1.3) rotate(12deg); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -60px))) scale(0.7) rotate(40deg); }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="marquee-wrap" id="marqueeWrap"></div>
+  </div>
+  <div class="progress-row">
+    <div class="progress-label" id="progressText">0/0 点灯</div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="headerBar" style="width:0%"></div></div>
+    <div class="progress-percent" id="progressPercent">0%</div>
+  </div>
+  <div class="main-row">
+    <div class="sidebar">
+      <div class="like-section">
+        <div class="section-title magenta">❤️ いいねランキング</div>
+        <div class="like-total" id="totalLikes">合計: 0</div>
+        <div id="rankingList"></div>
+      </div>
+    </div>
+    <div class="grid-wrap">
+      <div class="grid" id="grid"></div>
+      <div class="particle-layer" id="particleLayer"></div>
+    </div>
+  </div>
+<script>
+  /* ===== ストレージキー ===== */
+  var STORAGE_LIKES        = 'tikfinity_likes_v1';
+  var STORAGE_AVATARS      = 'tikfinity_avatars_v1';
+  var STORAGE_GIFTS        = 'tikfinity_gifts_v1';
+  var STORAGE_GIFT_IMAGES  = 'tikfinity_gift_images_v1';
+  var STORAGE_MESSAGES     = 'tikfinity_header_messages_v1';
+  var STORAGE_SLOTS        = 'tikfinity_slots_v2';        // v2: 動的スロット
+  var STORAGE_CONTRIBUTORS = 'tikfinity_contributors_v1';
+
+  /* ===== 定数 ===== */
+  var DEFAULT_MESSAGES = [
+    { text: "ギフトギャラリー", icon: "🎁", color: "#00ffff" },
+    { text: "いいねランキング", icon: "❤️", color: "#ff00ff" },
+    { text: "ありがとう！",     icon: "✨", color: "#ffd700" }
+  ];
+  var MSG_INTERVAL_MS  = 10000;
+  var PARTICLE_EMOJIS  = ['❤️','💖','💕','💗','💞','✨','⭐','🌟'];
+
+  /* ===== 状態変数 ===== */
+  var likeRanking      = {};   // userId → count
+  var likeAvatars      = {};   // userId → avatarUrl
+  var giftState        = {};   // giftName → bool (点灯)
+  var giftImageMap     = {};   // giftName → CDN imageUrl
+  var giftContributors = {};   // giftName → sender nickname
+  var giftSlots        = [];   // [{name}] 順序付きリスト
+  var giftSlotIndex    = {};   // giftName → true (重複防止)
+  var messages         = DEFAULT_MESSAGES.slice();
+  var currentMsgIdx    = 0;
+  var msgTimer         = null;
+
+  var grid = document.getElementById("grid");
+
+  /* ===== スロット管理 ===== */
+
+  // カードDOM生成（giftImageMapに既存URLがあれば即適用）
+  function createCard(name) {
+    var imageUrl = giftImageMap[name] || null;
+    var card = document.createElement("div");
+    card.className = "gift-card";
+    card.id = "card-" + name;
+
+    // 空状態プレースホルダーを除去
+    var emptyEl = document.getElementById("gridEmpty");
+    if (emptyEl) emptyEl.parentNode.removeChild(emptyEl);
+
+    card.innerHTML =
+      '<div class="lit-star" id="star-' + name + '" style="display:none">✨</div>' +
+      '<div class="gift-img-wrap">' +
+        '<img class="gift-img" id="img-' + name + '"' +
+          (imageUrl ? ' src="' + imageUrl + '"' : ' style="display:none"') +
+          ' alt="' + name + '"' +
+          ' onerror="this.style.display=\'none\';var p=document.getElementById(\'ph-' + name + '\');if(p)p.style.display=\'flex\';">' +
+        '<div class="gift-placeholder" id="ph-' + name + '"' +
+          (imageUrl ? ' style="display:none;"' : '') +
+          '>🎁</div>' +
+      '</div>' +
+      '<div class="gift-name">' + name + '</div>' +
+      '<div class="progress-wrap"><div class="progress-fill" id="prog-' + name + '" style="width:0%"></div></div>' +
+      '<div class="gift-status" id="status-' + name + '">未点灯</div>' +
+      '<div class="gift-contributor" id="contrib-' + name + '"></div>';
+
+    grid.appendChild(card);
+  }
+
+  // スロット追加（存在すれば画像更新のみ）
+  function addSlot(name, imageUrl) {
+    if (!name) return;
+    if (giftSlotIndex[name]) {
+      if (imageUrl) updateGiftImage(name, imageUrl);
+      return;
+    }
+    giftSlotIndex[name] = true;
+    giftSlots.push({ name: name });
+    giftState[name] = false;
+    if (imageUrl) giftImageMap[name] = imageUrl;
+    createCard(name);
+    updateHeader();
+    persistAll();
+  }
+
+  /* ===== 画像更新 ===== */
+  function updateGiftImage(name, url) {
+    if (!name || !url) return;
+    giftImageMap[name] = url;
+    var img = document.getElementById('img-' + name);
+    var ph  = document.getElementById('ph-' + name);
+    if (img) {
+      img.src = url;
+      img.style.display = 'block';
+      img.onerror = function() {
+        img.style.display = 'none';
+        if (ph) ph.style.display = 'flex';
+      };
+    }
+    if (ph) ph.style.display = 'none';
+    try { localStorage.setItem(STORAGE_GIFT_IMAGES, JSON.stringify(giftImageMap)); } catch(e) {}
+  }
+
+  /* ===== カード状態 ===== */
+  function updateCard(name, lit, animate) {
+    var card   = document.getElementById("card-" + name);
+    var star   = document.getElementById("star-" + name);
+    var prog   = document.getElementById("prog-" + name);
+    var status = document.getElementById("status-" + name);
+    if (!card) return;
+    if (lit) {
+      if (animate) {
+        card.className = "gift-card just-lit";
+        setTimeout(function() { if (giftState[name]) card.className = "gift-card lit"; }, 650);
+      } else {
+        card.className = "gift-card lit";
+      }
+      if (star)   star.style.display = "block";
+      if (prog)   prog.style.width   = "100%";
+      if (status) status.textContent = "点灯✅";
+    } else {
+      card.className = "gift-card";
+      if (star)   star.style.display = "none";
+      if (prog)   prog.style.width   = "0%";
+      if (status) status.textContent = "未点灯";
+    }
+  }
+
+  /* ===== ヘッダー進行度 ===== */
+  function updateHeader() {
+    var total    = giftSlots.length;
+    var litCount = 0;
+    var keys = Object.keys(giftState);
+    for (var i = 0; i < keys.length; i++) { if (giftState[keys[i]]) litCount++; }
+    var pct = total > 0 ? Math.round(litCount / total * 100) : 0;
+    document.getElementById("progressText").textContent = litCount + "/" + total + " 点灯";
+    document.getElementById("headerBar").style.width = pct + "%";
+    var pe = document.getElementById("progressPercent");
+    if (pe) pe.textContent = pct + "%";
+  }
+
+  /* ===== 永続化 ===== */
+  function persistAll() {
+    try {
+      localStorage.setItem(STORAGE_LIKES,        JSON.stringify(likeRanking));
+      localStorage.setItem(STORAGE_AVATARS,      JSON.stringify(likeAvatars));
+      localStorage.setItem(STORAGE_GIFTS,        JSON.stringify(giftState));
+      localStorage.setItem(STORAGE_GIFT_IMAGES,  JSON.stringify(giftImageMap));
+      localStorage.setItem(STORAGE_SLOTS,        JSON.stringify(giftSlots));
+      localStorage.setItem(STORAGE_CONTRIBUTORS, JSON.stringify(giftContributors));
+    } catch(e) {}
+  }
+  function persistMessages() {
+    try { localStorage.setItem(STORAGE_MESSAGES, JSON.stringify(messages)); } catch(e) {}
+  }
+
+  function loadAll() {
+    try {
+      // ライク
+      var l = localStorage.getItem(STORAGE_LIKES);
+      if (l) { var lo = JSON.parse(l); if (lo && typeof lo === 'object') likeRanking = lo; }
+      var a = localStorage.getItem(STORAGE_AVATARS);
+      if (a) { var ao = JSON.parse(a); if (ao && typeof ao === 'object') likeAvatars = ao; }
+      // メッセージ
+      var m = localStorage.getItem(STORAGE_MESSAGES);
+      if (m) { var ma = JSON.parse(m); if (Array.isArray(ma) && ma.length > 0) messages = ma; }
+      // ギフト画像キャッシュ（スロット生成前に読む）
+      var gi = localStorage.getItem(STORAGE_GIFT_IMAGES);
+      if (gi) { var gio = JSON.parse(gi); if (gio && typeof gio === 'object') giftImageMap = gio; }
+      // 貢献者
+      var ci = localStorage.getItem(STORAGE_CONTRIBUTORS);
+      if (ci) { var cio = JSON.parse(ci); if (cio && typeof cio === 'object') giftContributors = cio; }
+      // 点灯状態
+      var gd = localStorage.getItem(STORAGE_GIFTS);
+      var savedState = {};
+      if (gd) { var gdo = JSON.parse(gd); if (gdo && typeof gdo === 'object') savedState = gdo; }
+      // スロット復元 → カード生成
+      var sl = localStorage.getItem(STORAGE_SLOTS);
+      if (sl) {
+        var sla = JSON.parse(sl);
+        if (Array.isArray(sla)) {
+          sla.forEach(function(s) {
+            if (!s || !s.name || giftSlotIndex[s.name]) return;
+            giftSlotIndex[s.name] = true;
+            giftSlots.push({ name: s.name });
+            giftState[s.name] = !!savedState[s.name];
+            createCard(s.name);
+          });
+        }
+      }
+      // 点灯・貢献者を画面に反映
+      giftSlots.forEach(function(s) {
+        if (giftState[s.name]) {
+          updateCard(s.name, true, false);
+          var contrib = document.getElementById('contrib-' + s.name);
+          if (contrib && giftContributors[s.name]) {
+            contrib.textContent = '🎁 ' + giftContributors[s.name];
+          }
+        }
+      });
+    } catch(e) { console.error('loadAll error:', e); }
+  }
+
+  /* ===== アバター抽出 ===== */
+  function extractAvatar(d) {
+    if (!d) return null;
+    if (d.user) {
+      if (typeof d.user.profilePictureUrl === 'string') return d.user.profilePictureUrl;
+      if (d.user.profilePicture) {
+        if (typeof d.user.profilePicture === 'string') return d.user.profilePicture;
+        if (d.user.profilePicture.urls && d.user.profilePicture.urls[0]) return d.user.profilePicture.urls[0];
+        if (d.user.profilePicture.url_list && d.user.profilePicture.url_list[0]) return d.user.profilePicture.url_list[0];
+      }
+    }
+    if (typeof d.profilePictureUrl === 'string') return d.profilePictureUrl;
+    if (d.userDetails && d.userDetails.profilePictureUrls && d.userDetails.profilePictureUrls[0]) return d.userDetails.profilePictureUrls[0];
+    return null;
+  }
+
+  /* ===== ライクランキング ===== */
+  function renderLikes() {
+    var sorted = Object.entries(likeRanking).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var total  = Object.values(likeRanking).reduce(function(s,v){return s+v;}, 0);
+    var rl = ["🥇","🥈","🥉","4","5"];
+    var rc = ["top1","top2","top3","other","other"];
+    document.getElementById("totalLikes").textContent = "合計: " + total.toLocaleString();
+    var list = document.getElementById("rankingList");
+    list.textContent = "";
+    if (sorted.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'empty-msg';
+      empty.textContent = 'まだいいねなし';
+      list.appendChild(empty);
+      return;
+    }
+    sorted.forEach(function(entry, i) {
+      var user  = entry[0];
+      var count = entry[1];
+      var row = document.createElement('div');
+      row.className = 'like-row ' + rc[i];
+
+      var rank = document.createElement('div');
+      rank.className = 'like-rank';
+      rank.textContent = rl[i];
+
+      var avatar = document.createElement('div');
+      avatar.className = 'like-avatar';
+      var avUrl = likeAvatars[user];
+      if (avUrl) {
+        var avImg = document.createElement('img');
+        avImg.src = avUrl;
+        avImg.alt = '';
+        avImg.onerror = function() {
+          if (avImg.parentNode === avatar) avatar.removeChild(avImg);
+          avatar.textContent = (user || '?').charAt(0).toUpperCase();
+        };
+        avatar.appendChild(avImg);
+      } else {
+        avatar.textContent = (user || '?').charAt(0).toUpperCase();
+      }
+
+      var nm = document.createElement('div');
+      nm.className = 'like-name';
+      nm.textContent = user;
+
+      var cnt = document.createElement('div');
+      cnt.className = 'like-count';
+      cnt.textContent = count.toLocaleString() + '❤️';
+
+      row.appendChild(rank);
+      row.appendChild(avatar);
+      row.appendChild(nm);
+      row.appendChild(cnt);
+      list.appendChild(row);
+    });
+  }
+
+  /* ===== ヘッダーメッセージ ===== */
+  function showMessage(idx) {
+    var wrap = document.getElementById('marqueeWrap');
+    wrap.textContent = '';
+    var msg = messages[idx];
+    if (!msg) return;
+    var line = document.createElement('div');
+    line.className = 'marquee-line';
+    line.style.color = msg.color || '#ffffff';
+    var text = String(msg.text || '');
+    Array.from(text).forEach(function(c, i) {
+      var span = document.createElement('span');
+      span.className = 'marquee-char';
+      span.textContent = (c === ' ') ? ' ' : c;
+      span.style.animationDelay = (60 + i * 55) + 'ms';
+      line.appendChild(span);
+    });
+    wrap.appendChild(line);
+  }
+  function nextMessage() {
+    if (messages.length === 0) return;
+    currentMsgIdx = (currentMsgIdx + 1) % messages.length;
+    showMessage(currentMsgIdx);
+  }
+  function startMessageLoop() {
+    if (msgTimer) { clearInterval(msgTimer); msgTimer = null; }
+    if (messages.length === 0) return;
+    if (currentMsgIdx >= messages.length) currentMsgIdx = 0;
+    showMessage(currentMsgIdx);
+    if (messages.length > 1) msgTimer = setInterval(nextMessage, MSG_INTERVAL_MS);
+  }
+  function applyNewMessages(newList) {
+    if (!Array.isArray(newList)) return;
+    messages = newList.length > 0 ? newList : DEFAULT_MESSAGES.slice();
+    currentMsgIdx = 0;
+    persistMessages();
+    startMessageLoop();
+  }
+
+  /* ===== パーティクル ===== */
+  function spawnHearts(name) {
+    var card  = document.getElementById('card-' + name);
+    var layer = document.getElementById('particleLayer');
+    if (!card || !layer) return;
+    var cr = card.getBoundingClientRect();
+    var lr = layer.getBoundingClientRect();
+    var cx = cr.left - lr.left + cr.width  / 2;
+    var cy = cr.top  - lr.top  + cr.height / 2;
+    for (var i = 0; i < 14; i++) {
+      (function() {
+        var p = document.createElement('div');
+        p.className = 'heart-particle';
+        p.textContent = PARTICLE_EMOJIS[Math.floor(Math.random() * PARTICLE_EMOJIS.length)];
+        var angle    = -Math.PI/2 + (Math.random() - 0.5) * (Math.PI * 0.85);
+        var distance = 35 + Math.random() * 55;
+        p.style.left = cx + 'px';
+        p.style.top  = cy + 'px';
+        p.style.setProperty('--dx', Math.cos(angle) * distance + 'px');
+        p.style.setProperty('--dy', Math.sin(angle) * distance + 'px');
+        p.style.fontSize           = (10 + Math.random() * 9) + 'px';
+        p.style.animationDuration  = (1.0 + Math.random() * 0.6) + 's';
+        p.style.animationDelay     = (Math.random() * 0.15) + 's';
+        layer.appendChild(p);
+        setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 1800);
+      })();
+    }
+  }
+
+  /* ===== 点灯制御 ===== */
+  function lightUp(name) {
+    if (!giftState.hasOwnProperty(name) || giftState[name]) return;
+    giftState[name] = true;
+    updateCard(name, true, true);
+    spawnHearts(name);
+    updateHeader();
+    persistAll();
+  }
+  function lightOff(name) {
+    if (!giftState.hasOwnProperty(name)) return;
+    giftState[name] = false;
+    updateCard(name, false, false);
+    var contrib = document.getElementById('contrib-' + name);
+    if (contrib) contrib.textContent = '';
+    delete giftContributors[name];
+    updateHeader();
+    persistAll();
+  }
+  function resetAll() {
+    var names = Object.keys(giftState);
+    for (var i = 0; i < names.length; i++) {
+      giftState[names[i]] = false;
+      updateCard(names[i], false, false);
+      var contrib = document.getElementById('contrib-' + names[i]);
+      if (contrib) contrib.textContent = '';
+    }
+    var ckeys = Object.keys(giftContributors);
+    for (var j = 0; j < ckeys.length; j++) delete giftContributors[ckeys[j]];
+    updateHeader();
+    persistAll();
+  }
+
+  /* ===== WSメッセージ処理 ===== */
+  function handleMessage(msg) {
+    // いいね
+    if (msg.event === "like") {
+      var ld = msg.data || {};
+      var luser  = (ld.user && ld.user.uniqueId) || ld.uniqueId || ld.nickname || "不明";
+      var lcount = ld.likeCount || 1;
+      likeRanking[luser] = (likeRanking[luser] || 0) + lcount;
+      var av = extractAvatar(ld);
+      if (av) likeAvatars[luser] = av;
+      persistAll();
+      renderLikes();
+    }
+
+    // TikFinity設定イベント → ギフトトリガーをスロットとして登録
+    if (msg.event === "config") {
+      var cfgEvts = (msg.data && msg.data.events) || [];
+      cfgEvts.forEach(function(ev) {
+        var t = ev.trigger || {};
+        if (t.type === "gift" && t.name) {
+          addSlot(t.name, t.imageUrl || null);
+        }
+      });
+    }
+
+    // ギフト受信 → スロット自動生成 + 画像更新 + 貢献者表示 + 点灯
+    if (msg.event === "gift") {
+      var gd = msg.data || {};
+      // ギフト名（フィールド名は不確定のため複数候補対応）
+      var giftName = gd.giftName || gd.name || gd.gift_name || null;
+      // 画像URL（不確定）
+      var imageUrl =
+        gd.imageUrl ||
+        gd.giftImage ||
+        gd.image ||
+        (gd.extendedGiftInfo && gd.extendedGiftInfo.image &&
+         gd.extendedGiftInfo.image.url_list && gd.extendedGiftInfo.image.url_list[0]) ||
+        null;
+      // 贈り主
+      var sender =
+        (gd.user && (gd.user.nickname || gd.user.uniqueId)) ||
+        gd.nickname || gd.uniqueId || null;
+
+      if (giftName) {
+        // 未登録ならスロット新規作成
+        if (!giftSlotIndex[giftName]) {
+          addSlot(giftName, imageUrl);
+        } else if (imageUrl) {
+          updateGiftImage(giftName, imageUrl);
+        }
+        // 貢献者名を更新（既点灯でも上書きする）
+        if (sender) {
+          giftContributors[giftName] = sender;
+          var contrib = document.getElementById('contrib-' + giftName);
+          if (contrib) contrib.textContent = '🎁 ' + sender;
+        }
+        // 点灯
+        lightUp(giftName);
+      }
+    }
+
+    // コントロールパネルからの手動操作
+    if (msg.event === "lightUp")  lightUp(msg.name);
+    if (msg.event === "lightOff") lightOff(msg.name);
+    if (msg.event === "resetAll") resetAll();
+    if (msg.event === "resetLikes") {
+      var lkeys = Object.keys(likeRanking);
+      for (var li = 0; li < lkeys.length; li++) delete likeRanking[lkeys[li]];
+      var akeys = Object.keys(likeAvatars);
+      for (var ai = 0; ai < akeys.length; ai++) delete likeAvatars[akeys[ai]];
+      persistAll();
+      renderLikes();
+    }
+    if (msg.event === "updateMessages") {
+      applyNewMessages(msg.messages);
+    }
+  }
+
+  /* ===== WS接続 ===== */
+  function connectTikFinity() {
+    var ws = new WebSocket("ws://localhost:21213/");
+    ws.onmessage = function(e) { try { handleMessage(JSON.parse(e.data)); } catch(err) {} };
+    ws.onclose   = function() { setTimeout(connectTikFinity, 3000); };
+    ws.onerror   = function() { ws.close(); };
+  }
+  function connectControl() {
+    var ws = new WebSocket("ws://localhost:21214/");
+    ws.onmessage = function(e) { try { handleMessage(JSON.parse(e.data)); } catch(err) {} };
+    ws.onclose   = function() { setTimeout(connectControl, 3000); };
+    ws.onerror   = function() { ws.close(); };
+  }
+
+  /* ===== 初期化 ===== */
+  loadAll();
+
+  // スロットが0件なら待機メッセージ表示
+  if (giftSlots.length === 0) {
+    var emptyDiv = document.createElement('div');
+    emptyDiv.className = 'grid-empty';
+    emptyDiv.id = 'gridEmpty';
+    emptyDiv.textContent = '🎁 TikFinityに接続中...';
+    grid.appendChild(emptyDiv);
+  }
+
+  updateHeader();
+  renderLikes();
+  startMessageLoop();
+  connectTikFinity();
+  connectControl();
+</script>
+</body>
+</html>
