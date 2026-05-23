@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>配信経過時間オーバーレイ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap');
+
+  html, body {
+    margin: 0; padding: 0; background: transparent;
+    width: 100%; height: 100%; overflow: hidden;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+  }
+  #stage {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #wrap {
+    display: inline-flex; flex-direction: column; align-items: center;
+    gap: 6px;
+    padding: 18px 34px 16px;
+    border-radius: 26px;
+    background: rgba(8, 10, 18, 0.62);
+    border: 3px solid rgba(41, 230, 255, 0.55);
+    box-shadow:
+      0 0 18px rgba(41, 230, 255, 0.45),
+      0 0 34px rgba(255, 79, 216, 0.30),
+      inset 0 0 16px rgba(0, 0, 0, 0.55);
+    transition: border-color .4s, box-shadow .4s, opacity .4s;
+  }
+
+  /* バッジ（LIVE / 待機中） */
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 700; letter-spacing: 2px;
+    padding: 3px 14px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #29e6ff;
+  }
+  .dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #555; box-shadow: none;
+  }
+
+  /* 時間表示 */
+  .time {
+    font-size: 64px; font-weight: 800; line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+    color: #ffd34d;
+    text-shadow:
+      0 0 10px rgba(255, 211, 77, 0.85),
+      0 0 22px rgba(255, 168, 38, 0.55);
+  }
+
+  .label {
+    font-size: 16px; font-weight: 700; letter-spacing: 4px;
+    color: #ff7fe0;
+    text-shadow: 0 0 8px rgba(255, 79, 216, 0.6);
+  }
+
+  /* 配信中 */
+  #wrap.live {
+    border-color: rgba(255, 79, 216, 0.75);
+    box-shadow:
+      0 0 22px rgba(255, 79, 216, 0.55),
+      0 0 42px rgba(41, 230, 255, 0.40),
+      inset 0 0 18px rgba(0, 0, 0, 0.55);
+    animation: breathe 3.2s ease-in-out infinite;
+  }
+  #wrap.live .badge { background: rgba(255, 56, 96, 0.18); color: #ff5a78; }
+  #wrap.live .dot {
+    background: #ff3b5c;
+    box-shadow: 0 0 8px rgba(255, 59, 92, 0.95), 0 0 16px rgba(255, 59, 92, 0.7);
+    animation: blink 1.1s ease-in-out infinite;
+  }
+
+  /* 待機中 */
+  #wrap.idle { opacity: 0.78; }
+  #wrap.idle .time { color: #9aa3b5; text-shadow: none; }
+  #wrap.idle .label { color: #6f7891; text-shadow: none; }
+
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+  @keyframes breathe {
+    0%,100% { box-shadow: 0 0 22px rgba(255,79,216,0.45), 0 0 42px rgba(41,230,255,0.35), inset 0 0 18px rgba(0,0,0,0.55); }
+    50%      { box-shadow: 0 0 30px rgba(255,79,216,0.70), 0 0 56px rgba(41,230,255,0.55), inset 0 0 18px rgba(0,0,0,0.55); }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="wrap" class="idle">
+    <div class="badge"><span class="dot"></span><span id="badgeText">待機中</span></div>
+    <div class="time"><span id="t">00:00:00</span></div>
+    <div class="label">配信経過時間</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===== localStorage キー（オリジン毎に別管理） ===== */
+  var LS = {
+    start:  'tikfinity_timer_start_v1',
+    active: 'tikfinity_timer_active_v1',
+    last:   'tikfinity_timer_last_v1',
+    src:    'tikfinity_timer_src_v1'
+  };
+
+  /* 読込時に最終イベントからこれ以上経過していたら「再開」しない（前回配信の残骸を無視） */
+  var STALE_MS = 10 * 60 * 1000;   // 10分
+  /* 楽観再開後、イベントが一定時間来なければ「配信していない」とみなしリセット */
+  var GRACE_MS = 120 * 1000;       // 120秒
+
+  var running = false, startMs = 0, src = 'proxy', lastEventMs = 0, graceTimer = null;
+
+  var wrap = document.getElementById('wrap');
+  var tEl = document.getElementById('t');
+  var badgeText = document.getElementById('badgeText');
+
+  function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  function lsDel(k){ try { localStorage.removeItem(k); } catch(e){} }
+
+  function save(){
+    lsSet(LS.start,  String(startMs));
+    lsSet(LS.active, running ? '1' : '0');
+    lsSet(LS.last,   String(lastEventMs || Date.now()));
+    lsSet(LS.src,    src);
+  }
+
+  function two(n){ return (n < 10 ? '0' : '') + n; }
+  function fmt(ms){
+    if (ms < 0) ms = 0;
+    var s = Math.floor(ms / 1000);
+    var h = Math.floor(s / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    var ss = s % 60;
+    return two(h) + ':' + two(m) + ':' + two(ss);
+  }
+
+  function render(){
+    if (running) {
+      wrap.className = 'live';
+      badgeText.textContent = 'LIVE';
+      tEl.textContent = fmt(Date.now() - startMs);
+    } else {
+      wrap.className = 'idle';
+      badgeText.textContent = '待機中';
+      tEl.textContent = '00:00:00';
+    }
+  }
+
+  function clearGrace(){ if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; } }
+  function armGrace(){ clearGrace(); graceTimer = setTimeout(stop, GRACE_MS); }
+
+  function stop(){
+    running = false; startMs = 0; src = 'proxy';
+    clearGrace();
+    lsSet(LS.active, '0'); lsDel(LS.start);
+    render();
+  }
+
+  /* create_time（秒 or ミリ秒）を正規化 */
+  function toMs(v){ v = Number(v); return v < 1e12 ? v * 1000 : v; }
+
+  /* 配信中イベント受信。createSec があれば正確な開始時刻を採用 */
+  function onActivity(createSec){
+    lastEventMs = Date.now();
+    if (createSec && isFinite(createSec) && createSec > 0) {
+      var ms = toMs(createSec);
+      if (!running || src !== 'create_time' || Math.abs(ms - startMs) > 2000) {
+        startMs = ms; src = 'create_time'; running = true;
+      }
+    } else {
+      if (!running) { startMs = Date.now(); src = 'proxy'; running = true; }
+    }
+    clearGrace();
+    save();
+    render();
+  }
+
+  function extractCreate(msg){
+    var d = msg.data || {};
+    var ri = d.roomInfo || d.room_info || null;
+    var c = (ri && (ri.create_time || ri.createTime)) ||
+            d.create_time || d.createTime || msg.create_time || null;
+    return c ? Number(c) : null;
+  }
+
+  function handleMessage(msg){
+    if (!msg || !msg.event) return;
+    var ev = msg.event;
+
+    /* 配信終了系 → 停止リセット */
+    if (ev === 'streamEnd' || ev === 'liveEnd' || ev === 'disconnected') { stop(); return; }
+
+    /* ギフトオーバーレイ用の制御/設定イベントはタイマー開始の合図にしない */
+    if (ev === 'config' || ev === 'lightUp' || ev === 'lightOff' ||
+        ev === 'resetAll' || ev === 'resetLikes' || ev === 'updateMessages') return;
+
+    /* それ以外（connected / roomUser / member / chat / gift / like / social /
+       follow / share / subscribe / liveStart 等）＝配信中の合図 */
+    onActivity(extractCreate(msg));
+  }
+
+  function loadInit(){
+    clearGrace();
+    var active = lsGet(LS.active), st = lsGet(LS.start), last = lsGet(LS.last), s = lsGet(LS.src);
+    var now = Date.now();
+    if (active === '1' && st && last && (now - Number(last)) < STALE_MS) {
+      /* ソース再読込中とみなして楽観的に再開。次イベントで確定、来なければGRACE後リセット */
+      startMs = Number(st); src = s || 'proxy'; running = true; lastEventMs = Number(last);
+      render(); armGrace();
+    } else {
+      running = false; startMs = 0; render();
+    }
+  }
+
+  /* ===== WS接続（本番=21213 TikFinity / ローカル=21214 中継 両対応） ===== */
+  function connect(url){
+    var ws;
+    try { ws = new WebSocket(url); }
+    catch (e) { setTimeout(function(){ connect(url); }, 3000); return; }
+    ws.onmessage = function(e){ try { handleMessage(JSON.parse(e.data)); } catch(err){} };
+    ws.onclose   = function(){ setTimeout(function(){ connect(url); }, 3000); };
+    ws.onerror   = function(){ try { ws.close(); } catch(e){} };
+  }
+
+  /* ===== テスト/iframe 用に公開 ===== */
+  window.handleMessage  = handleMessage;
+  window.timerLoadInit  = loadInit;
+  window.timerState     = function(){ return { running: running, startMs: startMs, src: src, lastEventMs: lastEventMs }; };
+
+  /* ===== 初期化 ===== */
+  loadInit();
+  setInterval(render, 250);
+  connect("ws://localhost:21213/");
+  connect("ws://localhost:21214/");
+})();
+</script>
+</body>
+</html>
