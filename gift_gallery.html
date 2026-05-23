@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ギフトギャラリー（リーグ式）</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap');
+
+  html, body { margin:0; padding:0; background:transparent; font-family:'M PLUS Rounded 1c',sans-serif; }
+  #wrap {
+    position: relative;
+    width: 420px; margin: 0 auto; padding: 14px 14px 16px;
+    box-sizing: border-box;
+    background: rgba(8,10,18,0.62);
+    border: 3px solid rgba(41,230,255,0.5);
+    border-radius: 22px;
+    box-shadow: 0 0 16px rgba(41,230,255,0.4), 0 0 30px rgba(255,79,216,0.25), inset 0 0 14px rgba(0,0,0,0.5);
+  }
+
+  /* ===== ヘッダー ===== */
+  .head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .league {
+    flex:0 0 auto; font-weight:800; font-size:15px; letter-spacing:1px;
+    color:#0a0a0a; background:linear-gradient(135deg,#ffe27a,#ffb01f);
+    padding:4px 12px; border-radius:999px;
+    box-shadow:0 0 10px rgba(255,200,60,0.7);
+  }
+  .title { flex:1 1 auto; font-weight:800; font-size:16px; color:#fff;
+    text-shadow:0 0 8px rgba(41,230,255,0.6); }
+  .achieve { flex:0 0 auto; font-weight:800; font-size:15px; color:#ffd34d;
+    text-shadow:0 0 8px rgba(255,211,77,0.7); }
+
+  .head-bar-bg { height:6px; background:rgba(255,255,255,0.10); border-radius:6px; overflow:hidden; margin-bottom:12px; }
+  .head-bar-fill { height:100%; width:0%; border-radius:6px;
+    background:linear-gradient(90deg,#29e6ff,#ff4fd8,#ffd34d);
+    box-shadow:0 0 10px rgba(41,230,255,0.7); transition:width .5s ease; }
+
+  /* ===== グリッド ===== */
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .card {
+    position:relative; display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.12);
+    border-radius:14px; padding:7px 9px; transition:border-color .3s, box-shadow .3s, background .3s;
+  }
+  .icon { flex:0 0 auto; width:38px; height:38px; border-radius:10px;
+    background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .icon img { width:100%; height:100%; object-fit:contain; }
+  .icon .ph { font-size:20px; opacity:.8; }
+  .body { flex:1 1 auto; min-width:0; }
+  .gname { font-size:12px; font-weight:700; color:#dfe6f5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nums { display:flex; align-items:baseline; justify-content:space-between; margin-top:1px; }
+  .count { font-size:11px; color:#9aa3b5; font-variant-numeric:tabular-nums; }
+  .remain { font-size:15px; font-weight:800; color:#ffd34d; font-variant-numeric:tabular-nums;
+    text-shadow:0 0 6px rgba(255,211,77,0.6); }
+  .remain .u { font-size:11px; font-weight:700; }
+  .cbar-bg { height:4px; background:rgba(255,255,255,0.10); border-radius:3px; overflow:hidden; margin-top:4px; }
+  .cbar-fill { height:100%; width:0%; border-radius:3px;
+    background:linear-gradient(90deg,#29e6ff,#00ff88); transition:width .4s ease; }
+
+  /* 達成カード */
+  .card.done { border-color:rgba(0,255,136,0.7); background:rgba(0,255,136,0.10);
+    box-shadow:0 0 12px rgba(0,255,136,0.4); }
+  .card.done .remain { color:#39ff9d; text-shadow:0 0 8px rgba(57,255,157,0.8); }
+
+  .empty { grid-column:1/3; text-align:center; color:#8b93a7; font-size:13px; padding:24px 0; }
+
+  /* ===== コンプリート演出 ===== */
+  #complete {
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(6,8,15,0.78); border-radius:22px; z-index:5; flex-direction:column; gap:8px;
+  }
+  #complete.show { display:flex; animation:pop .5s ease; }
+  #complete .big { font-size:30px; font-weight:800;
+    background:linear-gradient(90deg,#ffd34d,#ff4fd8,#29e6ff); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 18px rgba(255,79,216,0.5); }
+  #complete .sub { font-size:14px; font-weight:700; color:#ffd34d; }
+  #complete .lg { font-size:13px; color:#cfd6e6; }
+  @keyframes pop { 0%{transform:scale(.6);opacity:0;} 60%{transform:scale(1.08);} 100%{transform:scale(1);opacity:1;} }
+  .spark { position:absolute; width:8px; height:8px; border-radius:50%; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="head">
+    <div class="league" id="leagueBadge">リーグ -</div>
+    <div class="title">ギフトギャラリー</div>
+    <div class="achieve" id="achieveText">0/0</div>
+  </div>
+  <div class="head-bar-bg"><div class="head-bar-fill" id="headBar"></div></div>
+  <div class="grid" id="grid"></div>
+
+  <div id="complete">
+    <div class="big">🎉 コンプリート！ 🎉</div>
+    <div class="sub" id="completeSub">全ギフト達成！</div>
+    <div class="lg" id="completeLg"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===================================================================
+     リーグ定義（ここを編集すればギフト/目標を変えられます）
+     name = TikFinityで表示されるギフト名のまま / target = 目標個数
+     img  = 任意（最初からアイコンを出したい時にURL指定。無ければ受信時に自動取得）
+     alias= 任意（実データのギフト名が英語等の時に [ "Rose" ] のように別名を足すと一致する）
+     リーグが上がったら B / A を埋めて、URLの ?league=B のように切り替える
+     =================================================================== */
+  var LEAGUES = {
+    "D": [],
+    "C": [
+      { name:"コーギー",        target:2  },
+      { name:"ハート",          target:2  },
+      { name:"バラ",            target:10 },
+      { name:"帽子と口ひげ",    target:3  },
+      { name:"香水",            target:3  },
+      { name:"友情ネックレス",  target:5  },
+      { name:"フィンガーハート",target:6  },
+      { name:"ドーナツ",        target:6  },
+      { name:"ハンドポーズ",    target:3  },
+      { name:"TikTok",          target:10 }
+    ],
+    "B": [],
+    "A": []
+  };
+  var DEFAULT_LEAGUE = "C";
+
+  /* ===== 状態 ===== */
+  var league, gifts = [], counts = {}, images = {}, completedShown = false;
+
+  var grid = document.getElementById('grid');
+  var leagueBadge = document.getElementById('leagueBadge');
+  var achieveText = document.getElementById('achieveText');
+  var headBar = document.getElementById('headBar');
+  var completeEl = document.getElementById('complete');
+
+  function lsKey(){ return 'giftgallery_counts_' + league + '_v1'; }
+  function lsImgKey(){ return 'giftgallery_images_v1'; }
+  function lsGet(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+  function lsSet(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+
+  function loadCounts(){
+    counts = {};
+    try { var o = JSON.parse(lsGet(lsKey())||'{}'); if(o&&typeof o==='object') counts=o; } catch(e){}
+    try { var im = JSON.parse(lsGet(lsImgKey())||'{}'); if(im&&typeof im==='object') images=im; } catch(e){}
+  }
+  function saveCounts(){ lsSet(lsKey(), JSON.stringify(counts)); }
+  function saveImages(){ lsSet(lsImgKey(), JSON.stringify(images)); }
+
+  /* ===== URLから現在のリーグ ===== */
+  function pickLeague(){
+    var p = null;
+    try { p = new URLSearchParams(location.search).get('league'); } catch(e){}
+    if (p) { p = p.toUpperCase(); if (LEAGUES[p]) return p; }
+    return DEFAULT_LEAGUE;
+  }
+
+  /* ===== ギフト名の正規化（一致判定用） ===== */
+  function norm(s){ return String(s==null?'':s).trim().toLowerCase(); }
+  function matchGift(received){
+    var r = norm(received);
+    for (var i=0;i<gifts.length;i++){
+      var g = gifts[i];
+      if (norm(g.name) === r) return g.name;
+      if (g.alias){ for (var j=0;j<g.alias.length;j++){ if (norm(g.alias[j]) === r) return g.name; } }
+    }
+    return null;
+  }
+
+  /* ===== 構築 ===== */
+  function build(){
+    league = pickLeague();
+    gifts = LEAGUES[league] || [];
+    loadCounts();
+    completedShown = false;
+    completeEl.className = '';
+    leagueBadge.textContent = 'リーグ ' + league;
+    grid.innerHTML = '';
+
+    if (!gifts.length){
+      var e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = 'リーグ ' + league + ' は未設定です（ギフトと目標を登録してください）';
+      grid.appendChild(e);
+      achieveText.textContent = '0/0';
+      headBar.style.width = '0%';
+      return;
+    }
+
+    for (var i=0;i<gifts.length;i++){
+      var g = gifts[i], id = 'g'+i;
+      var card = document.createElement('div');
+      card.className = 'card'; card.id = 'card-'+id;
+      var imgUrl = g.img || images[g.name] || null;
+      card.innerHTML =
+        '<div class="icon">' +
+          (imgUrl ? '<img id="img-'+id+'" src="'+imgUrl+'">' : '<span class="ph" id="ph-'+id+'">🎁</span>') +
+        '</div>' +
+        '<div class="body">' +
+          '<div class="gname" title="'+g.name+'">'+g.name+'</div>' +
+          '<div class="nums">' +
+            '<span class="count" id="cnt-'+id+'">0/'+g.target+'</span>' +
+            '<span class="remain" id="rem-'+id+'">あと'+g.target+'<span class="u">個</span></span>' +
+          '</div>' +
+          '<div class="cbar-bg"><div class="cbar-fill" id="bar-'+id+'"></div></div>' +
+        '</div>';
+      grid.appendChild(card);
+      g._id = id;
+    }
+    render();
+  }
+
+  /* ===== カウント加算 ===== */
+  function giftAmount(d){
+    var rc = Number(d.repeatCount!=null?d.repeatCount : d.comboCount!=null?d.comboCount :
+                    d.repeat_count!=null?d.repeat_count : d.count!=null?d.count :
+                    d.amount!=null?d.amount : 1);
+    if (!isFinite(rc) || rc < 1) rc = 1;
+    return rc;
+  }
+  // コンボ途中フレーム（repeatEnd===false）は二重計上を避けて無視
+  function isComboMidframe(d){
+    var re = (d.repeatEnd!=null)?d.repeatEnd : (d.repeat_end!=null?d.repeat_end : undefined);
+    return re === false;
+  }
+
+  function addCount(name, n){
+    counts[name] = (counts[name] || 0) + n;
+    saveCounts();
+    render();
+  }
+
+  /* ===== 描画 ===== */
+  function render(){
+    var done = 0;
+    for (var i=0;i<gifts.length;i++){
+      var g = gifts[i], id = g._id, got = counts[g.name] || 0;
+      var remain = Math.max(0, g.target - got);
+      var pct = g.target>0 ? Math.min(100, Math.round(got/g.target*100)) : 100;
+      var cnt = document.getElementById('cnt-'+id);
+      var rem = document.getElementById('rem-'+id);
+      var bar = document.getElementById('bar-'+id);
+      var card = document.getElementById('card-'+id);
+      if (cnt) cnt.textContent = Math.min(got,g.target) + '/' + g.target + (got>g.target?'(+'+(got-g.target)+')':'');
+      if (bar) bar.style.width = pct + '%';
+      if (remain <= 0){
+        if (rem) rem.innerHTML = '達成✅';
+        if (card) card.className = 'card done';
+        done++;
+      } else {
+        if (rem) rem.innerHTML = 'あと'+remain+'<span class="u">個</span>';
+        if (card) card.className = 'card';
+      }
+    }
+    achieveText.textContent = done + '/' + gifts.length;
+    headBar.style.width = (gifts.length? Math.round(done/gifts.length*100):0) + '%';
+
+    if (gifts.length && done === gifts.length){ showComplete(); }
+    else { completedShown = false; completeEl.className = ''; }
+  }
+
+  function showComplete(){
+    if (completedShown) return;
+    completedShown = true;
+    document.getElementById('completeLg').textContent = 'リーグ ' + league + ' / ' + gifts.length + '種コンプ';
+    completeEl.className = 'show';
+    confetti();
+  }
+  function confetti(){
+    var colors = ['#29e6ff','#ff4fd8','#ffd34d','#39ff9d'];
+    for (var i=0;i<24;i++){
+      (function(){
+        var s = document.createElement('div');
+        s.className = 'spark';
+        s.style.background = colors[i%colors.length];
+        s.style.left = (10+Math.random()*80) + '%';
+        s.style.top = '50%';
+        completeEl.appendChild(s);
+        var dx = (Math.random()*2-1)*160, dy = (Math.random()*-1-0.2)*180;
+        if (s.animate) s.animate(
+          [{transform:'translate(0,0)',opacity:1},{transform:'translate('+dx+'px,'+dy+'px)',opacity:0}],
+          {duration:900+Math.random()*500, easing:'cubic-bezier(.1,.7,.3,1)'}
+        );
+        setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 1500);
+      })();
+    }
+  }
+
+  /* ===== ギフト画像の取り込み ===== */
+  function extractImage(d){
+    return d.imageUrl || d.giftImage || d.image ||
+      (d.extendedGiftInfo && d.extendedGiftInfo.image && d.extendedGiftInfo.image.url_list && d.extendedGiftInfo.image.url_list[0]) || null;
+  }
+  function applyImage(name, url){
+    if (!url) return;
+    images[name] = url; saveImages();
+    for (var i=0;i<gifts.length;i++){
+      if (gifts[i].name === name){
+        var id = gifts[i]._id;
+        var iconImg = document.getElementById('img-'+id);
+        var ph = document.getElementById('ph-'+id);
+        if (!iconImg){
+          var icon = document.querySelector('#card-'+id+' .icon');
+          if (icon){ icon.innerHTML = '<img id="img-'+id+'" src="'+url+'">'; }
+        } else { iconImg.src = url; }
+        if (ph) ph.style.display = 'none';
+      }
+    }
+  }
+
+  /* ===== メッセージ処理 ===== */
+  function handleMessage(msg){
+    if (!msg || !msg.event) return;
+    var ev = msg.event;
+
+    if (ev === 'gift'){
+      var d = msg.data || {};
+      var gname = d.giftName || d.name || d.gift_name || null;
+      if (!gname) return;
+      var url = extractImage(d);
+      var key = matchGift(gname);
+      if (url && key) applyImage(key, url);
+      if (!key) return;                 // このリーグに無いギフトは無視
+      if (isComboMidframe(d)) return;   // コンボ途中は無視（重複防止）
+      addCount(key, giftAmount(d));
+      return;
+    }
+
+    if (ev === 'resetGifts' || ev === 'resetAll'){
+      counts = {}; saveCounts(); completedShown = false; completeEl.className=''; render(); return;
+    }
+    if (ev === 'setLeague' && msg.league && LEAGUES[String(msg.league).toUpperCase()]){
+      // URLを変えずに切替（テスト用）
+      var L = String(msg.league).toUpperCase();
+      league = L; gifts = LEAGUES[L]; loadCounts(); completedShown=false; completeEl.className='';
+      leagueBadge.textContent = 'リーグ ' + L;
+      rebuildGrid();
+      return;
+    }
+  }
+
+  function rebuildGrid(){
+    grid.innerHTML='';
+    if(!gifts.length){
+      var e=document.createElement('div'); e.className='empty';
+      e.textContent='リーグ '+league+' は未設定です'; grid.appendChild(e);
+      achieveText.textContent='0/0'; headBar.style.width='0%'; return;
+    }
+    for(var i=0;i<gifts.length;i++){
+      var g=gifts[i], id='g'+i; g._id=id;
+      var card=document.createElement('div'); card.className='card'; card.id='card-'+id;
+      var imgUrl=g.img||images[g.name]||null;
+      card.innerHTML='<div class="icon">'+(imgUrl?'<img id="img-'+id+'" src="'+imgUrl+'">':'<span class="ph" id="ph-'+id+'">🎁</span>')+'</div>'+
+        '<div class="body"><div class="gname" title="'+g.name+'">'+g.name+'</div>'+
+        '<div class="nums"><span class="count" id="cnt-'+id+'">0/'+g.target+'</span>'+
+        '<span class="remain" id="rem-'+id+'">あと'+g.target+'<span class="u">個</span></span></div>'+
+        '<div class="cbar-bg"><div class="cbar-fill" id="bar-'+id+'"></div></div></div>';
+      grid.appendChild(card);
+    }
+    render();
+  }
+
+  /* ===== WS接続（本番=21213 TikFinity / ローカル=21214 中継） ===== */
+  function connect(url){
+    var ws;
+    try { ws = new WebSocket(url); } catch(e){ setTimeout(function(){connect(url);},3000); return; }
+    ws.onmessage = function(e){ try{ handleMessage(JSON.parse(e.data)); }catch(err){} };
+    ws.onclose = function(){ setTimeout(function(){connect(url);},3000); };
+    ws.onerror = function(){ try{ws.close();}catch(e){} };
+  }
+
+  /* ===== テスト/iframe 用に公開 ===== */
+  window.handleMessage = handleMessage;
+  window.galleryState = function(){
+    var done=0; for(var i=0;i<gifts.length;i++){ if((counts[gifts[i].name]||0)>=gifts[i].target) done++; }
+    return { league:league, gifts:gifts.map(function(g){return g.name;}), counts:counts,
+             done:done, total:gifts.length, complete:(gifts.length>0 && done===gifts.length) };
+  };
+  window.galleryReset = function(){ counts={}; saveCounts(); completedShown=false; completeEl.className=''; render(); };
+  window.LEAGUES = LEAGUES;
+
+  /* ===== 初期化 ===== */
+  build();
+  connect("ws://localhost:21213/");
+  connect("ws://localhost:21214/");
+})();
+</script>
+</body>
+</html>
