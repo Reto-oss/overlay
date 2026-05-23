@@ -12,162 +12,97 @@
   .marquee-wrap { flex: 1; overflow: visible; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; }
   .marquee-line { display: flex; align-items: center; gap: 4px; height: 100%; flex-wrap: nowrap; }
   .marquee-char {
-    display: inline-block;
-    font-size: 15px;
-    font-weight: 900;
-    letter-spacing: 1.5px;
-    line-height: 1;
-    text-shadow: 0 0 6px currentColor;
-    opacity: 0;
-    transform: translateY(10px) scale(0.5);
+    display: inline-block; font-size: 15px; font-weight: 900; letter-spacing: 1.5px; line-height: 1;
+    text-shadow: 0 0 6px currentColor; opacity: 0; transform: translateY(10px) scale(0.5);
     animation: charPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
   @keyframes charPop {
-    0%   { opacity: 0; transform: translateY(10px) scale(0.5) rotate(-8deg); }
-    60%  { opacity: 1; transform: translateY(0) scale(1.05) rotate(3deg); }
-    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+    0%{opacity:0;transform:translateY(10px) scale(0.5) rotate(-8deg);}
+    60%{opacity:1;transform:translateY(0) scale(1.05) rotate(3deg);}
+    100%{opacity:1;transform:translateY(0) scale(1) rotate(0);}
   }
-  .header::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, #00ffff88, transparent); animation: scan 2.5s linear infinite; pointer-events: none; }
+  .header::after { content:""; position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(90deg,transparent,#00ffff88,transparent); animation:scan 2.5s linear infinite; pointer-events:none; }
   @keyframes scan { from{top:0} to{top:48px} }
 
-  /* ===== 進行度メーター ===== */
-  .progress-row {
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 6px; padding: 6px 10px;
-    background: linear-gradient(90deg, rgba(0,20,25,0.85), rgba(0,40,50,0.7), rgba(0,20,25,0.85));
-    border: 1px solid #00ffff44;
-    border-radius: 8px;
-    box-shadow: 0 0 6px #00ffff22 inset;
-  }
-  .progress-label {
-    font-size: 13px; font-weight: 900;
-    color: #00ffff;
-    text-shadow: 0 0 4px #00ffff88;
-    letter-spacing: 1px;
-    flex-shrink: 0;
-    min-width: 70px;
-  }
-  .progress-bar-bg {
-    flex: 1; height: 12px;
-    background: #ffffff10;
-    border: 1px solid #ffffff15;
-    border-radius: 6px;
-    overflow: hidden;
-    position: relative;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #00ffff, #00ff88, #ffd700);
-    border-radius: 6px;
-    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: 0 0 6px #00ffffaa;
-    position: relative;
-  }
-  .progress-bar-fill::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-    animation: shine 2.5s linear infinite;
-  }
+  /* ===== 進行度メーター（達成） ===== */
+  .progress-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; padding:6px 10px;
+    background:linear-gradient(90deg,rgba(0,20,25,0.85),rgba(0,40,50,0.7),rgba(0,20,25,0.85));
+    border:1px solid #00ffff44; border-radius:8px; box-shadow:0 0 6px #00ffff22 inset; }
+  .progress-label { font-size:13px; font-weight:900; color:#00ffff; text-shadow:0 0 4px #00ffff88; letter-spacing:1px; flex-shrink:0; min-width:74px; }
+  .progress-bar-bg { flex:1; height:12px; background:#ffffff10; border:1px solid #ffffff15; border-radius:6px; overflow:hidden; position:relative; }
+  .progress-bar-fill { height:100%; width:0%; background:linear-gradient(90deg,#00ffff,#00ff88,#ffd700); border-radius:6px; transition:width 0.8s cubic-bezier(0.22,1,0.36,1); box-shadow:0 0 6px #00ffffaa; position:relative; }
+  .progress-bar-fill::after { content:""; position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent); animation:shine 2.5s linear infinite; }
   @keyframes shine { from{transform:translateX(-100%)} to{transform:translateX(200%)} }
-  .progress-percent {
-    font-size: 12px; font-weight: 900;
-    color: #ffd700;
-    text-shadow: 0 0 4px #ffd70088;
-    flex-shrink: 0;
-    min-width: 36px;
-    text-align: right;
-  }
+  .progress-percent { font-size:12px; font-weight:900; color:#ffd700; text-shadow:0 0 4px #ffd70088; flex-shrink:0; min-width:36px; text-align:right; }
+  .league-badge { flex-shrink:0; font-size:11px; font-weight:900; color:#0a0a0a; background:linear-gradient(135deg,#ffe27a,#ffb01f); padding:2px 9px; border-radius:999px; box-shadow:0 0 8px rgba(255,200,60,0.7); letter-spacing:1px; }
 
   /* ===== メインレイアウト ===== */
-  .main-row { display: flex; gap: 6px; align-items: flex-start; }
-  .sidebar { width: 140px; flex-shrink: 0; }
-  .like-section { background: linear-gradient(135deg, rgba(0,0,0,0.85), rgba(20,0,25,0.9)); border: 1px solid #ff00ff33; border-radius: 10px; padding: 7px 8px; }
-  .section-title { font-size: 10px; font-weight: 900; letter-spacing: 1px; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #ffffff22; }
-  .section-title.magenta { text-shadow: 0 0 4px #ff00ff; color: #ff00ff; }
-  .like-total { font-size: 9px; font-weight: 700; color: #ff00ff88; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #ffffff22; text-align: right; }
-  .like-row { display: flex; align-items: center; gap: 4px; padding: 3px 0; }
-  .like-rank { font-size: 11px; min-width: 18px; text-align: center; font-weight: 900; flex-shrink: 0; }
-  .like-row.top1 .like-rank { color: #ffd700; text-shadow: 0 0 6px #ffd700; }
-  .like-row.top2 .like-rank { color: #c0c0c0; text-shadow: 0 0 4px #c0c0c0; }
-  .like-row.top3 .like-rank { color: #cd7f32; text-shadow: 0 0 4px #cd7f32; }
-  .like-row.other .like-rank { color: #ffffff44; font-size: 9px; }
-  .like-avatar { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; background: #ffffff10; border: 1px solid #ffffff22; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; color: #ffffff66; }
-  .like-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .like-row.top1 .like-avatar { border-color: #ffd70088; box-shadow: 0 0 4px #ffd70066; }
-  .like-row.top2 .like-avatar { border-color: #c0c0c088; }
-  .like-row.top3 .like-avatar { border-color: #cd7f3288; }
-  .like-name { flex: 1; font-size: 10px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .like-count { font-size: 10px; font-weight: 900; color: #ff00ff; min-width: 22px; text-align: right; flex-shrink: 0; }
-  .like-row.top1 .like-count { color: #ffd700; }
+  .main-row { display:flex; gap:6px; align-items:flex-start; }
+  .sidebar { width:140px; flex-shrink:0; }
+  .like-section { background:linear-gradient(135deg,rgba(0,0,0,0.85),rgba(20,0,25,0.9)); border:1px solid #ff00ff33; border-radius:10px; padding:7px 8px; }
+  .section-title { font-size:10px; font-weight:900; letter-spacing:1px; margin-bottom:5px; padding-bottom:3px; border-bottom:1px solid #ffffff22; }
+  .section-title.magenta { text-shadow:0 0 4px #ff00ff; color:#ff00ff; }
+  .like-total { font-size:9px; font-weight:700; color:#ff00ff88; margin-bottom:5px; padding-bottom:3px; border-bottom:1px solid #ffffff22; text-align:right; }
+  .like-row { display:flex; align-items:center; gap:4px; padding:3px 0; }
+  .like-rank { font-size:11px; min-width:18px; text-align:center; font-weight:900; flex-shrink:0; }
+  .like-row.top1 .like-rank { color:#ffd700; text-shadow:0 0 6px #ffd700; }
+  .like-row.top2 .like-rank { color:#c0c0c0; text-shadow:0 0 4px #c0c0c0; }
+  .like-row.top3 .like-rank { color:#cd7f32; text-shadow:0 0 4px #cd7f32; }
+  .like-row.other .like-rank { color:#ffffff44; font-size:9px; }
+  .like-avatar { width:18px; height:18px; border-radius:50%; flex-shrink:0; background:#ffffff10; border:1px solid #ffffff22; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; color:#ffffff66; }
+  .like-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+  .like-row.top1 .like-avatar { border-color:#ffd70088; box-shadow:0 0 4px #ffd70066; }
+  .like-row.top2 .like-avatar { border-color:#c0c0c088; }
+  .like-row.top3 .like-avatar { border-color:#cd7f3288; }
+  .like-name { flex:1; font-size:10px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .like-count { font-size:10px; font-weight:900; color:#ff00ff; min-width:22px; text-align:right; flex-shrink:0; }
+  .like-row.top1 .like-count { color:#ffd700; }
 
-  /* ===== ギフトグリッド ===== */
-  .grid-wrap { flex: 1; position: relative; }
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
-  .gift-card { position: relative; background: linear-gradient(160deg, rgba(0,0,0,0.8), rgba(0,10,20,0.85)); border: 1px solid #ffffff15; border-radius: 8px; padding: 7px 4px 5px; text-align: center; overflow: hidden; }
-  .gift-card.lit { border-color: #00ffff; background: linear-gradient(160deg, rgba(0,20,25,0.9), rgba(0,40,50,0.85)); animation: litPulse 3s ease-in-out infinite; }
-  @keyframes litPulse { 0%,100%{box-shadow:0 0 6px #00ffff55} 50%{box-shadow:0 0 12px #00ffff88} }
-  .gift-card.just-lit { animation: litBurst 0.6s ease forwards, litPulse 3s 0.6s infinite; }
-  @keyframes litBurst { 0%{transform:scale(1)} 40%{transform:scale(1.12);box-shadow:0 0 20px #00ffff} 100%{transform:scale(1)} }
-  .lit-star { position: absolute; top: 2px; right: 2px; font-size: 9px; animation: starSpin 2s linear infinite; }
+  /* ===== ギフトグリッド（リーグ式） ===== */
+  .grid-wrap { flex:1; position:relative; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:4px; }
+  .gift-card { position:relative; background:linear-gradient(160deg,rgba(0,0,0,0.8),rgba(0,10,20,0.85)); border:1px solid #ffffff15; border-radius:8px; padding:7px 4px 5px; text-align:center; overflow:hidden; }
+  .gift-card.done { border-color:#00ff88; background:linear-gradient(160deg,rgba(0,25,15,0.9),rgba(0,45,30,0.85)); animation:donePulse 3s ease-in-out infinite; }
+  @keyframes donePulse { 0%,100%{box-shadow:0 0 6px #00ff8855} 50%{box-shadow:0 0 12px #00ff8888} }
+  .gift-card.just-done { animation:doneBurst 0.6s ease forwards, donePulse 3s 0.6s infinite; }
+  @keyframes doneBurst { 0%{transform:scale(1)} 40%{transform:scale(1.12);box-shadow:0 0 20px #00ff88} 100%{transform:scale(1)} }
+  .lit-star { position:absolute; top:2px; right:3px; font-size:11px; display:none; animation:starSpin 3s linear infinite; }
   @keyframes starSpin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-  .gift-img-wrap { width: 42px; height: 42px; margin: 0 auto 3px; position: relative; }
-  .gift-img { width: 42px; height: 42px; object-fit: contain; display: block; border-radius: 6px; }
-  .gift-card:not(.lit) .gift-img { filter: grayscale(90%) brightness(0.45); }
-  .gift-placeholder { width: 42px; height: 42px; border-radius: 6px; background: #ffffff08; border: 1px dashed #ffffff22; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; position: absolute; top: 0; left: 0; }
-  .gift-card:not(.lit) .gift-placeholder { opacity: 0.3; }
-  .gift-name { font-size: 9px; font-weight: 800; color: #fff; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gift-card:not(.lit) .gift-name { color: #ffffff55; }
-  .progress-wrap { width: 100%; height: 2px; background: #ffffff0f; border-radius: 2px; overflow: hidden; margin-bottom: 2px; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg,#00ffff,#00ff88); border-radius: 2px; transition: width 0.6s ease; }
-  .gift-card:not(.lit) .progress-fill { background: #ffffff22; }
-  .gift-status { font-size: 8px; font-weight: 700; }
-  .gift-card.lit .gift-status { color: #00ffff; }
-  .gift-card:not(.lit) .gift-status { color: #ffffff44; }
+  .gift-img-wrap { width:40px; height:40px; margin:0 auto 2px; position:relative; }
+  .gift-img { width:40px; height:40px; object-fit:contain; display:block; border-radius:6px; }
+  .gift-card:not(.done) .gift-img { filter:grayscale(80%) brightness(0.6); }
+  .gift-placeholder { width:40px; height:40px; border-radius:6px; background:#ffffff08; border:1px dashed #ffffff22; display:flex; align-items:center; justify-content:center; font-size:18px; line-height:1; position:absolute; top:0; left:0; }
+  .gift-card.done .gift-placeholder { opacity:0.4; }
+  .gift-name { font-size:9px; font-weight:800; color:#fff; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gift-card:not(.done) .gift-name { color:#ffffffaa; }
+  .gift-remain { font-size:15px; font-weight:900; color:#ffd700; text-shadow:0 0 5px #ffd70088; line-height:1.05; font-variant-numeric:tabular-nums; }
+  .gift-remain .u { font-size:9px; font-weight:800; }
+  .gift-card.done .gift-remain { color:#39ff9d; text-shadow:0 0 6px #39ff9d99; }
+  .progress-wrap { width:100%; height:3px; background:#ffffff0f; border-radius:2px; overflow:hidden; margin:3px 0 2px; }
+  .progress-fill { height:100%; width:0%; background:linear-gradient(90deg,#00ffff,#00ff88); border-radius:2px; transition:width 0.5s ease; }
+  .gift-count { font-size:8px; font-weight:700; color:#9aa3b5; font-variant-numeric:tabular-nums; }
+  .gift-contributor { font-size:8px; font-weight:800; color:#ffd700; text-shadow:0 0 3px #ffd70066; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:10px; padding:0 2px; }
+  .gift-contributor:empty { min-height:10px; }
 
-  /* ===== 貢献者表示 ===== */
-  .gift-contributor {
-    font-size: 8px; font-weight: 800;
-    color: #ffd700;
-    text-shadow: 0 0 3px #ffd70066;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    min-height: 10px;
-    padding: 1px 2px 0;
-  }
-  .gift-card:not(.lit) .gift-contributor { visibility: hidden; }
-
-  /* ===== 空状態 ===== */
-  .empty-msg { color: #ffffff22; font-size: 10px; font-weight: 700; text-align: center; padding: 6px; }
-  .grid-empty {
-    grid-column: 1 / -1;
-    color: #ffffff33; font-size: 11px; font-weight: 700;
-    text-align: center; padding: 24px 8px; letter-spacing: 1px;
-    border: 1px dashed #ffffff11; border-radius: 8px;
-  }
+  .grid-empty { grid-column:1/-1; color:#ffffff33; font-size:11px; font-weight:700; text-align:center; padding:24px 8px; letter-spacing:1px; border:1px dashed #ffffff11; border-radius:8px; }
+  .empty-msg { color:#ffffff22; font-size:10px; font-weight:700; text-align:center; padding:6px; }
 
   /* ===== ハートパーティクル ===== */
-  .particle-layer {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    overflow: visible;
-    z-index: 100;
-  }
-  .heart-particle {
-    position: absolute;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    will-change: transform, opacity;
-    filter: drop-shadow(0 0 4px #ff00ff77);
-    animation: heartFly 1.2s ease-out forwards;
-  }
+  .particle-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible; z-index:100; }
+  .heart-particle { position:absolute; pointer-events:none; transform:translate(-50%,-50%); will-change:transform,opacity; filter:drop-shadow(0 0 4px #ff00ff77); animation:heartFly 1.2s ease-out forwards; }
   @keyframes heartFly {
-    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); }
-    15%  { opacity: 1; transform: translate(-50%, -50%) scale(1.3) rotate(12deg); }
-    100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -60px))) scale(0.7) rotate(40deg); }
+    0%{opacity:0;transform:translate(-50%,-50%) scale(0.2) rotate(0deg);}
+    15%{opacity:1;transform:translate(-50%,-50%) scale(1.3) rotate(12deg);}
+    100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-50% + var(--dy,-60px))) scale(0.7) rotate(40deg);}
   }
+
+  /* ===== コンプリート演出 ===== */
+  #complete { position:fixed; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:6px; background:rgba(6,8,15,0.78); z-index:300; }
+  #complete.show { display:flex; animation:cpop .5s ease; }
+  #complete .big { font-size:28px; font-weight:900; background:linear-gradient(90deg,#ffd34d,#ff4fd8,#29e6ff); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 16px rgba(255,79,216,0.4); }
+  #complete .sub { font-size:13px; font-weight:800; color:#ffd34d; }
+  @keyframes cpop { 0%{transform:scale(.6);opacity:0;} 60%{transform:scale(1.08);} 100%{transform:scale(1);opacity:1;} }
+  .spark { position:absolute; width:8px; height:8px; border-radius:50%; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -175,7 +110,8 @@
     <div class="marquee-wrap" id="marqueeWrap"></div>
   </div>
   <div class="progress-row">
-    <div class="progress-label" id="progressText">0/0 点灯</div>
+    <div class="league-badge" id="leagueBadge">リーグ -</div>
+    <div class="progress-label" id="progressText">0/0 達成</div>
     <div class="progress-bar-bg"><div class="progress-bar-fill" id="headerBar" style="width:0%"></div></div>
     <div class="progress-percent" id="progressPercent">0%</div>
   </div>
@@ -192,485 +128,380 @@
       <div class="particle-layer" id="particleLayer"></div>
     </div>
   </div>
+
+  <div id="complete">
+    <div class="big">🎉 コンプリート！ 🎉</div>
+    <div class="sub" id="completeSub"></div>
+  </div>
+
 <script>
+  /* ===================================================================
+     リーグ定義（ここを編集すればギフト/目標を変えられます）
+     name  = TikFinityで表示されるギフト名のまま / target = 目標個数
+     alias = 任意（実データが英語名等の時 [ "Rose" ] を足すと一致する）
+     img   = 任意（最初からアイコンを出したい時にURL指定。無ければ受信時に自動取得）
+     リーグが上がったら B / A を埋めて、URLの ?league=B のように切り替える
+     =================================================================== */
+  var LEAGUES = {
+    "D": [],
+    "C": [
+      { name:"コーギー",        target:2  },
+      { name:"ハート",          target:2  },
+      { name:"バラ",            target:10 },
+      { name:"帽子と口ひげ",    target:3  },
+      { name:"香水",            target:3  },
+      { name:"友情ネックレス",  target:5  },
+      { name:"フィンガーハート",target:6  },
+      { name:"ドーナツ",        target:6  },
+      { name:"ハンドポーズ",    target:3  },
+      { name:"TikTok",          target:10 }
+    ],
+    "B": [],
+    "A": []
+  };
+  var DEFAULT_LEAGUE = "C";
+
   /* ===== ストレージキー ===== */
-  var STORAGE_LIKES        = 'tikfinity_likes_v1';
-  var STORAGE_AVATARS      = 'tikfinity_avatars_v1';
-  var STORAGE_GIFTS        = 'tikfinity_gifts_v1';
-  var STORAGE_GIFT_IMAGES  = 'tikfinity_gift_images_v1';
-  var STORAGE_MESSAGES     = 'tikfinity_header_messages_v1';
-  var STORAGE_SLOTS        = 'tikfinity_slots_v2';        // v2: 動的スロット
-  var STORAGE_CONTRIBUTORS = 'tikfinity_contributors_v1';
+  var STORAGE_LIKES       = 'tikfinity_likes_v1';
+  var STORAGE_AVATARS     = 'tikfinity_avatars_v1';
+  var STORAGE_MESSAGES    = 'tikfinity_header_messages_v1';
+  var STORAGE_GIFT_IMAGES = 'tikfinity_gift_images_v1';
 
   /* ===== 定数 ===== */
   var DEFAULT_MESSAGES = [
-    { text: "ギフトギャラリー", icon: "🎁", color: "#00ffff" },
-    { text: "いいねランキング", icon: "❤️", color: "#ff00ff" },
-    { text: "ありがとう！",     icon: "✨", color: "#ffd700" }
+    { text:"ギフトギャラリー", icon:"🎁", color:"#00ffff" },
+    { text:"いいねランキング", icon:"❤️", color:"#ff00ff" },
+    { text:"ありがとう！",     icon:"✨", color:"#ffd700" }
   ];
-  var MSG_INTERVAL_MS  = 10000;
-  var PARTICLE_EMOJIS  = ['❤️','💖','💕','💗','💞','✨','⭐','🌟'];
+  var MSG_INTERVAL_MS = 10000;
+  var PARTICLE_EMOJIS = ['❤️','💖','💕','💗','💞','✨','⭐','🌟'];
 
-  /* ===== 状態変数 ===== */
-  var likeRanking      = {};   // userId → count
-  var likeAvatars      = {};   // userId → avatarUrl
-  var giftState        = {};   // giftName → bool (点灯)
-  var giftImageMap     = {};   // giftName → CDN imageUrl
-  var giftContributors = {};   // giftName → sender nickname
-  var giftSlots        = [];   // [{name}] 順序付きリスト
-  var giftSlotIndex    = {};   // giftName → true (重複防止)
-  var messages         = DEFAULT_MESSAGES.slice();
-  var currentMsgIdx    = 0;
-  var msgTimer         = null;
+  /* ===== 状態 ===== */
+  var likeRanking = {}, likeAvatars = {};
+  var messages = DEFAULT_MESSAGES.slice(), currentMsgIdx = 0, msgTimer = null;
+  var league, gifts = [], counts = {}, giftContributors = {}, giftImageMap = {};
+  var idByName = {}, completedShown = false;
 
   var grid = document.getElementById("grid");
+  var leagueBadge = document.getElementById("leagueBadge");
+  var completeEl = document.getElementById("complete");
 
-  /* ===== スロット管理 ===== */
+  function lsGet(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+  function lsSet(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+  function countsKey(){ return 'tikfinity_gallery_' + league + '_v1'; }
 
-  // カードDOM生成（giftImageMapに既存URLがあれば即適用）
-  function createCard(name) {
-    var imageUrl = giftImageMap[name] || null;
-    var card = document.createElement("div");
-    card.className = "gift-card";
-    card.id = "card-" + name;
+  /* ===== 永続化 ===== */
+  function persistLikes(){ lsSet(STORAGE_LIKES,JSON.stringify(likeRanking)); lsSet(STORAGE_AVATARS,JSON.stringify(likeAvatars)); }
+  function persistMessages(){ lsSet(STORAGE_MESSAGES,JSON.stringify(messages)); }
+  function persistImages(){ lsSet(STORAGE_GIFT_IMAGES,JSON.stringify(giftImageMap)); }
+  function persistCounts(){ lsSet(countsKey(), JSON.stringify({ c:counts, k:giftContributors })); }
 
-    // 空状態プレースホルダーを除去
-    var emptyEl = document.getElementById("gridEmpty");
-    if (emptyEl) emptyEl.parentNode.removeChild(emptyEl);
+  function loadGlobals(){
+    try{ var l=lsGet(STORAGE_LIKES); if(l){var o=JSON.parse(l); if(o&&typeof o==='object') likeRanking=o;} }catch(e){}
+    try{ var a=lsGet(STORAGE_AVATARS); if(a){var o=JSON.parse(a); if(o&&typeof o==='object') likeAvatars=o;} }catch(e){}
+    try{ var m=lsGet(STORAGE_MESSAGES); if(m){var ma=JSON.parse(m); if(Array.isArray(ma)&&ma.length) messages=ma;} }catch(e){}
+    try{ var gi=lsGet(STORAGE_GIFT_IMAGES); if(gi){var o=JSON.parse(gi); if(o&&typeof o==='object') giftImageMap=o;} }catch(e){}
+  }
+  function loadCounts(){
+    counts={}; giftContributors={};
+    try{ var o=JSON.parse(lsGet(countsKey())||'{}'); if(o&&typeof o==='object'){ counts=o.c||{}; giftContributors=o.k||{}; } }catch(e){}
+  }
 
-    card.innerHTML =
-      '<div class="lit-star" id="star-' + name + '" style="display:none">✨</div>' +
-      '<div class="gift-img-wrap">' +
-        '<img class="gift-img" id="img-' + name + '"' +
-          (imageUrl ? ' src="' + imageUrl + '"' : ' style="display:none"') +
-          ' alt="' + name + '"' +
-          ' onerror="this.style.display=\'none\';var p=document.getElementById(\'ph-' + name + '\');if(p)p.style.display=\'flex\';">' +
-        '<div class="gift-placeholder" id="ph-' + name + '"' +
-          (imageUrl ? ' style="display:none;"' : '') +
-          '>🎁</div>' +
-      '</div>' +
-      '<div class="gift-name">' + name + '</div>' +
-      '<div class="progress-wrap"><div class="progress-fill" id="prog-' + name + '" style="width:0%"></div></div>' +
-      '<div class="gift-status" id="status-' + name + '">未点灯</div>' +
-      '<div class="gift-contributor" id="contrib-' + name + '"></div>';
+  /* ===== リーグ選択 ===== */
+  function pickLeague(){
+    var p=null; try{ p=new URLSearchParams(location.search).get('league'); }catch(e){}
+    if(p){ p=p.toUpperCase(); if(LEAGUES[p]) return p; }
+    return DEFAULT_LEAGUE;
+  }
+  function norm(s){ return String(s==null?'':s).trim().toLowerCase(); }
+  function matchGift(received){
+    var r=norm(received);
+    for(var i=0;i<gifts.length;i++){
+      var g=gifts[i];
+      if(norm(g.name)===r) return g.name;
+      if(g.alias){ for(var j=0;j<g.alias.length;j++){ if(norm(g.alias[j])===r) return g.name; } }
+    }
+    return null;
+  }
+  function giftByName(name){ for(var i=0;i<gifts.length;i++){ if(gifts[i].name===name) return gifts[i]; } return null; }
 
+  /* ===== カード生成 ===== */
+  function createCard(g){
+    var id=g._id, name=g.name, imageUrl=g.img||giftImageMap[name]||null;
+    var card=document.createElement("div");
+    card.className="gift-card"; card.id="card-"+id;
+    card.innerHTML=
+      '<div class="lit-star" id="star-'+id+'">🏆</div>'+
+      '<div class="gift-img-wrap">'+
+        '<img class="gift-img" id="img-'+id+'"'+(imageUrl?' src="'+imageUrl+'"':' style="display:none"')+' alt="'+name+'"'+
+          ' onerror="this.style.display=\'none\';var p=document.getElementById(\'ph-'+id+'\');if(p)p.style.display=\'flex\';">'+
+        '<div class="gift-placeholder" id="ph-'+id+'"'+(imageUrl?' style="display:none;"':'')+'>🎁</div>'+
+      '</div>'+
+      '<div class="gift-name" title="'+name+'">'+name+'</div>'+
+      '<div class="gift-remain" id="rem-'+id+'">あと'+g.target+'<span class="u">個</span></div>'+
+      '<div class="progress-wrap"><div class="progress-fill" id="prog-'+id+'" style="width:0%"></div></div>'+
+      '<div class="gift-count" id="cnt-'+id+'">0/'+g.target+'</div>'+
+      '<div class="gift-contributor" id="contrib-'+id+'"></div>';
     grid.appendChild(card);
   }
 
-  // スロット追加（存在すれば画像更新のみ）
-  function addSlot(name, imageUrl) {
-    if (!name) return;
-    if (giftSlotIndex[name]) {
-      if (imageUrl) updateGiftImage(name, imageUrl);
-      return;
+  function buildGrid(){
+    league=pickLeague(); gifts=LEAGUES[league]||[]; idByName={};
+    loadCounts(); completedShown=false; completeEl.className='';
+    leagueBadge.textContent='リーグ '+league;
+    grid.innerHTML='';
+    if(!gifts.length){
+      var e=document.createElement('div'); e.className='grid-empty';
+      e.textContent='リーグ '+league+' は未設定です';
+      grid.appendChild(e); updateProgress(); return;
     }
-    giftSlotIndex[name] = true;
-    giftSlots.push({ name: name });
-    giftState[name] = false;
-    if (imageUrl) giftImageMap[name] = imageUrl;
-    createCard(name);
-    updateHeader();
-    persistAll();
+    gifts.forEach(function(g,i){ g._id='g'+i; idByName[g.name]='g'+i; createCard(g); });
+    gifts.forEach(function(g){ renderGift(g); });
+    updateProgress();
   }
 
-  /* ===== 画像更新 ===== */
-  function updateGiftImage(name, url) {
-    if (!name || !url) return;
-    giftImageMap[name] = url;
-    var img = document.getElementById('img-' + name);
-    var ph  = document.getElementById('ph-' + name);
-    if (img) {
-      img.src = url;
-      img.style.display = 'block';
-      img.onerror = function() {
-        img.style.display = 'none';
-        if (ph) ph.style.display = 'flex';
-      };
-    }
-    if (ph) ph.style.display = 'none';
-    try { localStorage.setItem(STORAGE_GIFT_IMAGES, JSON.stringify(giftImageMap)); } catch(e) {}
+  /* ===== 画像 ===== */
+  function extractImage(d){
+    return d.imageUrl||d.giftImage||d.image||
+      (d.extendedGiftInfo&&d.extendedGiftInfo.image&&d.extendedGiftInfo.image.url_list&&d.extendedGiftInfo.image.url_list[0])||null;
+  }
+  function applyImage(name,url){
+    if(!url) return;
+    giftImageMap[name]=url; persistImages();
+    var id=idByName[name]; if(!id) return;
+    var img=document.getElementById('img-'+id), ph=document.getElementById('ph-'+id);
+    if(img){ img.src=url; img.style.display='block'; img.onerror=function(){img.style.display='none'; if(ph)ph.style.display='flex';}; }
+    if(ph) ph.style.display='none';
   }
 
-  /* ===== カード状態 ===== */
-  function updateCard(name, lit, animate) {
-    var card   = document.getElementById("card-" + name);
-    var star   = document.getElementById("star-" + name);
-    var prog   = document.getElementById("prog-" + name);
-    var status = document.getElementById("status-" + name);
-    if (!card) return;
-    if (lit) {
-      if (animate) {
-        card.className = "gift-card just-lit";
-        setTimeout(function() { if (giftState[name]) card.className = "gift-card lit"; }, 650);
-      } else {
-        card.className = "gift-card lit";
-      }
-      if (star)   star.style.display = "block";
-      if (prog)   prog.style.width   = "100%";
-      if (status) status.textContent = "点灯✅";
+  /* ===== カウント ===== */
+  function giftAmount(d){
+    var rc=Number(d.repeatCount!=null?d.repeatCount : d.comboCount!=null?d.comboCount :
+                  d.repeat_count!=null?d.repeat_count : d.count!=null?d.count : d.amount!=null?d.amount : 1);
+    if(!isFinite(rc)||rc<1) rc=1; return rc;
+  }
+  function isComboMidframe(d){
+    var re=(d.repeatEnd!=null)?d.repeatEnd:(d.repeat_end!=null?d.repeat_end:undefined);
+    return re===false;
+  }
+
+  function renderGift(g){
+    var id=g._id, got=counts[g.name]||0, remain=Math.max(0,g.target-got);
+    var pct=g.target>0?Math.min(100,Math.round(got/g.target*100)):100;
+    var cnt=document.getElementById('cnt-'+id), rem=document.getElementById('rem-'+id);
+    var bar=document.getElementById('prog-'+id), card=document.getElementById('card-'+id);
+    var star=document.getElementById('star-'+id), contrib=document.getElementById('contrib-'+id);
+    if(cnt) cnt.textContent=Math.min(got,g.target)+'/'+g.target+(got>g.target?'(+'+(got-g.target)+')':'');
+    if(bar) bar.style.width=pct+'%';
+    if(contrib) contrib.textContent=(got>0 && giftContributors[g.name])?('🎁 '+giftContributors[g.name]):'';
+    if(remain<=0){
+      if(rem) rem.innerHTML='達成<span class="u"></span>✅';
+      if(card && card.className.indexOf('done')===-1) card.className='gift-card done';
+      if(star) star.style.display='block';
     } else {
-      card.className = "gift-card";
-      if (star)   star.style.display = "none";
-      if (prog)   prog.style.width   = "0%";
-      if (status) status.textContent = "未点灯";
+      if(rem) rem.innerHTML='あと'+remain+'<span class="u">個</span>';
+      if(card) card.className='gift-card';
+      if(star) star.style.display='none';
     }
   }
 
-  /* ===== ヘッダー進行度 ===== */
-  function updateHeader() {
-    var total    = giftSlots.length;
-    var litCount = 0;
-    var keys = Object.keys(giftState);
-    for (var i = 0; i < keys.length; i++) { if (giftState[keys[i]]) litCount++; }
-    var pct = total > 0 ? Math.round(litCount / total * 100) : 0;
-    document.getElementById("progressText").textContent = litCount + "/" + total + " 点灯";
-    document.getElementById("headerBar").style.width = pct + "%";
-    var pe = document.getElementById("progressPercent");
-    if (pe) pe.textContent = pct + "%";
+  function updateProgress(){
+    var done=0; for(var i=0;i<gifts.length;i++){ if((counts[gifts[i].name]||0)>=gifts[i].target) done++; }
+    var pct=gifts.length?Math.round(done/gifts.length*100):0;
+    document.getElementById('progressText').textContent=done+'/'+gifts.length+' 達成';
+    document.getElementById('headerBar').style.width=pct+'%';
+    var pe=document.getElementById('progressPercent'); if(pe) pe.textContent=pct+'%';
+    if(gifts.length && done===gifts.length) showComplete(); else { completedShown=false; completeEl.className=''; }
   }
 
-  /* ===== 永続化 ===== */
-  function persistAll() {
-    try {
-      localStorage.setItem(STORAGE_LIKES,        JSON.stringify(likeRanking));
-      localStorage.setItem(STORAGE_AVATARS,      JSON.stringify(likeAvatars));
-      localStorage.setItem(STORAGE_GIFTS,        JSON.stringify(giftState));
-      localStorage.setItem(STORAGE_GIFT_IMAGES,  JSON.stringify(giftImageMap));
-      localStorage.setItem(STORAGE_SLOTS,        JSON.stringify(giftSlots));
-      localStorage.setItem(STORAGE_CONTRIBUTORS, JSON.stringify(giftContributors));
-    } catch(e) {}
-  }
-  function persistMessages() {
-    try { localStorage.setItem(STORAGE_MESSAGES, JSON.stringify(messages)); } catch(e) {}
-  }
-
-  function loadAll() {
-    try {
-      // ライク
-      var l = localStorage.getItem(STORAGE_LIKES);
-      if (l) { var lo = JSON.parse(l); if (lo && typeof lo === 'object') likeRanking = lo; }
-      var a = localStorage.getItem(STORAGE_AVATARS);
-      if (a) { var ao = JSON.parse(a); if (ao && typeof ao === 'object') likeAvatars = ao; }
-      // メッセージ
-      var m = localStorage.getItem(STORAGE_MESSAGES);
-      if (m) { var ma = JSON.parse(m); if (Array.isArray(ma) && ma.length > 0) messages = ma; }
-      // ギフト画像キャッシュ（スロット生成前に読む）
-      var gi = localStorage.getItem(STORAGE_GIFT_IMAGES);
-      if (gi) { var gio = JSON.parse(gi); if (gio && typeof gio === 'object') giftImageMap = gio; }
-      // 貢献者
-      var ci = localStorage.getItem(STORAGE_CONTRIBUTORS);
-      if (ci) { var cio = JSON.parse(ci); if (cio && typeof cio === 'object') giftContributors = cio; }
-      // 点灯状態
-      var gd = localStorage.getItem(STORAGE_GIFTS);
-      var savedState = {};
-      if (gd) { var gdo = JSON.parse(gd); if (gdo && typeof gdo === 'object') savedState = gdo; }
-      // スロット復元 → カード生成
-      var sl = localStorage.getItem(STORAGE_SLOTS);
-      if (sl) {
-        var sla = JSON.parse(sl);
-        if (Array.isArray(sla)) {
-          sla.forEach(function(s) {
-            if (!s || !s.name || giftSlotIndex[s.name]) return;
-            giftSlotIndex[s.name] = true;
-            giftSlots.push({ name: s.name });
-            giftState[s.name] = !!savedState[s.name];
-            createCard(s.name);
-          });
-        }
-      }
-      // 点灯・貢献者を画面に反映
-      giftSlots.forEach(function(s) {
-        if (giftState[s.name]) {
-          updateCard(s.name, true, false);
-          var contrib = document.getElementById('contrib-' + s.name);
-          if (contrib && giftContributors[s.name]) {
-            contrib.textContent = '🎁 ' + giftContributors[s.name];
-          }
-        }
-      });
-    } catch(e) { console.error('loadAll error:', e); }
-  }
-
-  /* ===== アバター抽出 ===== */
-  function extractAvatar(d) {
-    if (!d) return null;
-    if (d.user) {
-      if (typeof d.user.profilePictureUrl === 'string') return d.user.profilePictureUrl;
-      if (d.user.profilePicture) {
-        if (typeof d.user.profilePicture === 'string') return d.user.profilePicture;
-        if (d.user.profilePicture.urls && d.user.profilePicture.urls[0]) return d.user.profilePicture.urls[0];
-        if (d.user.profilePicture.url_list && d.user.profilePicture.url_list[0]) return d.user.profilePicture.url_list[0];
+  function addCount(name,n,animate){
+    var was=(counts[name]||0);
+    counts[name]=was+n;
+    var g=giftByName(name);
+    if(g){
+      var id=g._id, card=document.getElementById('card-'+id);
+      var nowDone=(counts[name]>=g.target), wasDone=(was>=g.target);
+      renderGift(g);
+      if(nowDone && !wasDone && animate && card){
+        card.className='gift-card just-done';
+        setTimeout(function(){ if((counts[name]||0)>=g.target) card.className='gift-card done'; },650);
       }
     }
-    if (typeof d.profilePictureUrl === 'string') return d.profilePictureUrl;
-    if (d.userDetails && d.userDetails.profilePictureUrls && d.userDetails.profilePictureUrls[0]) return d.userDetails.profilePictureUrls[0];
+    persistCounts(); updateProgress();
+  }
+
+  function showComplete(){
+    if(completedShown) return; completedShown=true;
+    document.getElementById('completeSub').textContent='リーグ '+league+' / '+gifts.length+'種コンプ';
+    completeEl.className='show'; confetti();
+  }
+  function confetti(){
+    var colors=['#29e6ff','#ff4fd8','#ffd34d','#39ff9d'];
+    for(var i=0;i<24;i++){(function(k){
+      var s=document.createElement('div'); s.className='spark'; s.style.background=colors[k%colors.length];
+      s.style.left=(10+Math.random()*80)+'%'; s.style.top='50%'; completeEl.appendChild(s);
+      var dx=(Math.random()*2-1)*160, dy=(Math.random()*-1-0.2)*180;
+      if(s.animate) s.animate([{transform:'translate(0,0)',opacity:1},{transform:'translate('+dx+'px,'+dy+'px)',opacity:0}],{duration:900+Math.random()*500,easing:'cubic-bezier(.1,.7,.3,1)'});
+      setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); },1500);
+    })(i);}
+  }
+
+  /* ===== いいね（既存維持） ===== */
+  function extractAvatar(d){
+    if(!d) return null;
+    if(d.user){
+      if(typeof d.user.profilePictureUrl==='string') return d.user.profilePictureUrl;
+      if(d.user.profilePicture){
+        if(typeof d.user.profilePicture==='string') return d.user.profilePicture;
+        if(d.user.profilePicture.urls&&d.user.profilePicture.urls[0]) return d.user.profilePicture.urls[0];
+        if(d.user.profilePicture.url_list&&d.user.profilePicture.url_list[0]) return d.user.profilePicture.url_list[0];
+      }
+    }
+    if(typeof d.profilePictureUrl==='string') return d.profilePictureUrl;
+    if(d.userDetails&&d.userDetails.profilePictureUrls&&d.userDetails.profilePictureUrls[0]) return d.userDetails.profilePictureUrls[0];
     return null;
   }
-
-  /* ===== ライクランキング ===== */
-  function renderLikes() {
-    var sorted = Object.entries(likeRanking).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-    var total  = Object.values(likeRanking).reduce(function(s,v){return s+v;}, 0);
-    var rl = ["🥇","🥈","🥉","4","5"];
-    var rc = ["top1","top2","top3","other","other"];
-    document.getElementById("totalLikes").textContent = "合計: " + total.toLocaleString();
-    var list = document.getElementById("rankingList");
-    list.textContent = "";
-    if (sorted.length === 0) {
-      var empty = document.createElement('div');
-      empty.className = 'empty-msg';
-      empty.textContent = 'まだいいねなし';
-      list.appendChild(empty);
-      return;
-    }
-    sorted.forEach(function(entry, i) {
-      var user  = entry[0];
-      var count = entry[1];
-      var row = document.createElement('div');
-      row.className = 'like-row ' + rc[i];
-
-      var rank = document.createElement('div');
-      rank.className = 'like-rank';
-      rank.textContent = rl[i];
-
-      var avatar = document.createElement('div');
-      avatar.className = 'like-avatar';
-      var avUrl = likeAvatars[user];
-      if (avUrl) {
-        var avImg = document.createElement('img');
-        avImg.src = avUrl;
-        avImg.alt = '';
-        avImg.onerror = function() {
-          if (avImg.parentNode === avatar) avatar.removeChild(avImg);
-          avatar.textContent = (user || '?').charAt(0).toUpperCase();
-        };
+  function renderLikes(){
+    var sorted=Object.entries(likeRanking).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var total=Object.values(likeRanking).reduce(function(s,v){return s+v;},0);
+    var rl=["🥇","🥈","🥉","4","5"], rc=["top1","top2","top3","other","other"];
+    document.getElementById("totalLikes").textContent="合計: "+total.toLocaleString();
+    var list=document.getElementById("rankingList"); list.textContent="";
+    if(sorted.length===0){ var em=document.createElement('div'); em.className='empty-msg'; em.textContent='まだいいねなし'; list.appendChild(em); return; }
+    sorted.forEach(function(entry,i){
+      var user=entry[0], count=entry[1];
+      var row=document.createElement('div'); row.className='like-row '+rc[i];
+      var rank=document.createElement('div'); rank.className='like-rank'; rank.textContent=rl[i];
+      var avatar=document.createElement('div'); avatar.className='like-avatar';
+      var avUrl=likeAvatars[user];
+      if(avUrl){ var avImg=document.createElement('img'); avImg.src=avUrl; avImg.alt='';
+        avImg.onerror=function(){ if(avImg.parentNode===avatar) avatar.removeChild(avImg); avatar.textContent=(user||'?').charAt(0).toUpperCase(); };
         avatar.appendChild(avImg);
-      } else {
-        avatar.textContent = (user || '?').charAt(0).toUpperCase();
-      }
-
-      var nm = document.createElement('div');
-      nm.className = 'like-name';
-      nm.textContent = user;
-
-      var cnt = document.createElement('div');
-      cnt.className = 'like-count';
-      cnt.textContent = count.toLocaleString() + '❤️';
-
-      row.appendChild(rank);
-      row.appendChild(avatar);
-      row.appendChild(nm);
-      row.appendChild(cnt);
-      list.appendChild(row);
+      } else { avatar.textContent=(user||'?').charAt(0).toUpperCase(); }
+      var nm=document.createElement('div'); nm.className='like-name'; nm.textContent=user;
+      var cnt=document.createElement('div'); cnt.className='like-count'; cnt.textContent=count.toLocaleString()+'❤️';
+      row.appendChild(rank); row.appendChild(avatar); row.appendChild(nm); row.appendChild(cnt); list.appendChild(row);
     });
   }
 
-  /* ===== ヘッダーメッセージ ===== */
-  function showMessage(idx) {
-    var wrap = document.getElementById('marqueeWrap');
-    wrap.textContent = '';
-    var msg = messages[idx];
-    if (!msg) return;
-    var line = document.createElement('div');
-    line.className = 'marquee-line';
-    line.style.color = msg.color || '#ffffff';
-    var text = String(msg.text || '');
-    Array.from(text).forEach(function(c, i) {
-      var span = document.createElement('span');
-      span.className = 'marquee-char';
-      span.textContent = (c === ' ') ? ' ' : c;
-      span.style.animationDelay = (60 + i * 55) + 'ms';
-      line.appendChild(span);
+  /* ===== ヘッダーメッセージ（既存維持） ===== */
+  function showMessage(idx){
+    var wrap=document.getElementById('marqueeWrap'); wrap.textContent='';
+    var msg=messages[idx]; if(!msg) return;
+    var line=document.createElement('div'); line.className='marquee-line'; line.style.color=msg.color||'#ffffff';
+    Array.from(String(msg.text||'')).forEach(function(c,i){
+      var span=document.createElement('span'); span.className='marquee-char';
+      span.textContent=(c===' ')?' ':c; span.style.animationDelay=(60+i*55)+'ms'; line.appendChild(span);
     });
     wrap.appendChild(line);
   }
-  function nextMessage() {
-    if (messages.length === 0) return;
-    currentMsgIdx = (currentMsgIdx + 1) % messages.length;
+  function nextMessage(){ if(!messages.length) return; currentMsgIdx=(currentMsgIdx+1)%messages.length; showMessage(currentMsgIdx); }
+  function startMessageLoop(){
+    if(msgTimer){ clearInterval(msgTimer); msgTimer=null; }
+    if(!messages.length) return;
+    if(currentMsgIdx>=messages.length) currentMsgIdx=0;
     showMessage(currentMsgIdx);
+    if(messages.length>1) msgTimer=setInterval(nextMessage,MSG_INTERVAL_MS);
   }
-  function startMessageLoop() {
-    if (msgTimer) { clearInterval(msgTimer); msgTimer = null; }
-    if (messages.length === 0) return;
-    if (currentMsgIdx >= messages.length) currentMsgIdx = 0;
-    showMessage(currentMsgIdx);
-    if (messages.length > 1) msgTimer = setInterval(nextMessage, MSG_INTERVAL_MS);
-  }
-  function applyNewMessages(newList) {
-    if (!Array.isArray(newList)) return;
-    messages = newList.length > 0 ? newList : DEFAULT_MESSAGES.slice();
-    currentMsgIdx = 0;
-    persistMessages();
-    startMessageLoop();
+  function applyNewMessages(newList){
+    if(!Array.isArray(newList)) return;
+    messages=newList.length>0?newList:DEFAULT_MESSAGES.slice();
+    currentMsgIdx=0; persistMessages(); startMessageLoop();
   }
 
   /* ===== パーティクル ===== */
-  function spawnHearts(name) {
-    var card  = document.getElementById('card-' + name);
-    var layer = document.getElementById('particleLayer');
-    if (!card || !layer) return;
-    var cr = card.getBoundingClientRect();
-    var lr = layer.getBoundingClientRect();
-    var cx = cr.left - lr.left + cr.width  / 2;
-    var cy = cr.top  - lr.top  + cr.height / 2;
-    for (var i = 0; i < 14; i++) {
-      (function() {
-        var p = document.createElement('div');
-        p.className = 'heart-particle';
-        p.textContent = PARTICLE_EMOJIS[Math.floor(Math.random() * PARTICLE_EMOJIS.length)];
-        var angle    = -Math.PI/2 + (Math.random() - 0.5) * (Math.PI * 0.85);
-        var distance = 35 + Math.random() * 55;
-        p.style.left = cx + 'px';
-        p.style.top  = cy + 'px';
-        p.style.setProperty('--dx', Math.cos(angle) * distance + 'px');
-        p.style.setProperty('--dy', Math.sin(angle) * distance + 'px');
-        p.style.fontSize           = (10 + Math.random() * 9) + 'px';
-        p.style.animationDuration  = (1.0 + Math.random() * 0.6) + 's';
-        p.style.animationDelay     = (Math.random() * 0.15) + 's';
-        layer.appendChild(p);
-        setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 1800);
-      })();
-    }
-  }
-
-  /* ===== 点灯制御 ===== */
-  function lightUp(name) {
-    if (!giftState.hasOwnProperty(name) || giftState[name]) return;
-    giftState[name] = true;
-    updateCard(name, true, true);
-    spawnHearts(name);
-    updateHeader();
-    persistAll();
-  }
-  function lightOff(name) {
-    if (!giftState.hasOwnProperty(name)) return;
-    giftState[name] = false;
-    updateCard(name, false, false);
-    var contrib = document.getElementById('contrib-' + name);
-    if (contrib) contrib.textContent = '';
-    delete giftContributors[name];
-    updateHeader();
-    persistAll();
-  }
-  function resetAll() {
-    var names = Object.keys(giftState);
-    for (var i = 0; i < names.length; i++) {
-      giftState[names[i]] = false;
-      updateCard(names[i], false, false);
-      var contrib = document.getElementById('contrib-' + names[i]);
-      if (contrib) contrib.textContent = '';
-    }
-    var ckeys = Object.keys(giftContributors);
-    for (var j = 0; j < ckeys.length; j++) delete giftContributors[ckeys[j]];
-    updateHeader();
-    persistAll();
+  function spawnHearts(id){
+    var card=document.getElementById('card-'+id), layer=document.getElementById('particleLayer');
+    if(!card||!layer) return;
+    var cr=card.getBoundingClientRect(), lr=layer.getBoundingClientRect();
+    var cx=cr.left-lr.left+cr.width/2, cy=cr.top-lr.top+cr.height/2;
+    for(var i=0;i<12;i++){(function(){
+      var p=document.createElement('div'); p.className='heart-particle';
+      p.textContent=PARTICLE_EMOJIS[Math.floor(Math.random()*PARTICLE_EMOJIS.length)];
+      var angle=-Math.PI/2+(Math.random()-0.5)*(Math.PI*0.85), distance=30+Math.random()*50;
+      p.style.left=cx+'px'; p.style.top=cy+'px';
+      p.style.setProperty('--dx',Math.cos(angle)*distance+'px');
+      p.style.setProperty('--dy',Math.sin(angle)*distance+'px');
+      p.style.fontSize=(10+Math.random()*8)+'px'; p.style.animationDuration=(1.0+Math.random()*0.6)+'s'; p.style.animationDelay=(Math.random()*0.15)+'s';
+      layer.appendChild(p); setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); },1800);
+    })();}
   }
 
   /* ===== WSメッセージ処理 ===== */
-  function handleMessage(msg) {
-    // いいね
-    if (msg.event === "like") {
-      var ld = msg.data || {};
-      var luser  = (ld.user && ld.user.uniqueId) || ld.uniqueId || ld.nickname || "不明";
-      var lcount = ld.likeCount || 1;
-      likeRanking[luser] = (likeRanking[luser] || 0) + lcount;
-      var av = extractAvatar(ld);
-      if (av) likeAvatars[luser] = av;
-      persistAll();
-      renderLikes();
+  function handleMessage(msg){
+    if(!msg||!msg.event) return;
+
+    if(msg.event==="like"){
+      var ld=msg.data||{};
+      var luser=(ld.user&&ld.user.uniqueId)||ld.uniqueId||ld.nickname||"不明";
+      var lcount=ld.likeCount||1;
+      likeRanking[luser]=(likeRanking[luser]||0)+lcount;
+      var av=extractAvatar(ld); if(av) likeAvatars[luser]=av;
+      persistLikes(); renderLikes(); return;
     }
 
-    // TikFinity設定イベント → ギフトトリガーをスロットとして登録
-    if (msg.event === "config") {
-      var cfgEvts = (msg.data && msg.data.events) || [];
-      cfgEvts.forEach(function(ev) {
-        var t = ev.trigger || {};
-        if (t.type === "gift" && t.name) {
-          addSlot(t.name, t.imageUrl || null);
-        }
-      });
+    if(msg.event==="gift"){
+      var gd=msg.data||{};
+      var giftName=gd.giftName||gd.name||gd.gift_name||null;
+      if(!giftName) return;
+      var url=extractImage(gd);
+      var key=matchGift(giftName);
+      if(url&&key) applyImage(key,url);
+      if(!key) return;                  // このリーグに無いギフトは無視
+      if(isComboMidframe(gd)) return;    // コンボ途中は無視（二重防止）
+      var sender=(gd.user&&(gd.user.nickname||gd.user.uniqueId))||gd.nickname||gd.uniqueId||null;
+      if(sender) giftContributors[key]=sender;
+      addCount(key, giftAmount(gd), true);
+      spawnHearts(idByName[key]);
+      return;
     }
 
-    // ギフト受信 → スロット自動生成 + 画像更新 + 貢献者表示 + 点灯
-    if (msg.event === "gift") {
-      var gd = msg.data || {};
-      // ギフト名（フィールド名は不確定のため複数候補対応）
-      var giftName = gd.giftName || gd.name || gd.gift_name || null;
-      // 画像URL（不確定）
-      var imageUrl =
-        gd.imageUrl ||
-        gd.giftImage ||
-        gd.image ||
-        (gd.extendedGiftInfo && gd.extendedGiftInfo.image &&
-         gd.extendedGiftInfo.image.url_list && gd.extendedGiftInfo.image.url_list[0]) ||
-        null;
-      // 贈り主
-      var sender =
-        (gd.user && (gd.user.nickname || gd.user.uniqueId)) ||
-        gd.nickname || gd.uniqueId || null;
-
-      if (giftName) {
-        // 未登録ならスロット新規作成
-        if (!giftSlotIndex[giftName]) {
-          addSlot(giftName, imageUrl);
-        } else if (imageUrl) {
-          updateGiftImage(giftName, imageUrl);
-        }
-        // 貢献者名を更新（既点灯でも上書きする）
-        if (sender) {
-          giftContributors[giftName] = sender;
-          var contrib = document.getElementById('contrib-' + giftName);
-          if (contrib) contrib.textContent = '🎁 ' + sender;
-        }
-        // 点灯
-        lightUp(giftName);
-      }
+    if(msg.event==="updateMessages"){ applyNewMessages(msg.messages); return; }
+    if(msg.event==="resetLikes"){
+      likeRanking={}; likeAvatars={}; persistLikes(); renderLikes(); return;
     }
-
-    // コントロールパネルからの手動操作
-    if (msg.event === "lightUp")  lightUp(msg.name);
-    if (msg.event === "lightOff") lightOff(msg.name);
-    if (msg.event === "resetAll") resetAll();
-    if (msg.event === "resetLikes") {
-      var lkeys = Object.keys(likeRanking);
-      for (var li = 0; li < lkeys.length; li++) delete likeRanking[lkeys[li]];
-      var akeys = Object.keys(likeAvatars);
-      for (var ai = 0; ai < akeys.length; ai++) delete likeAvatars[akeys[ai]];
-      persistAll();
-      renderLikes();
+    if(msg.event==="resetGifts"||msg.event==="resetAll"){
+      counts={}; giftContributors={}; persistCounts();
+      gifts.forEach(function(g){ renderGift(g); }); completedShown=false; completeEl.className=''; updateProgress(); return;
     }
-    if (msg.event === "updateMessages") {
-      applyNewMessages(msg.messages);
+    if(msg.event==="setLeague" && msg.league && LEAGUES[String(msg.league).toUpperCase()]){
+      // URLを変えずに切替（テスト用）。実運用はURLの ?league=
+      var saveL=String(msg.league).toUpperCase();
+      history && history.replaceState && null; // no-op
+      // 疑似的にleagueを変えて再構築
+      var u=new URL(location.href); u.searchParams.set('league',saveL);
+      try{ history.replaceState(null,'',u.toString()); }catch(e){}
+      buildGrid(); return;
     }
   }
 
   /* ===== WS接続 ===== */
-  function connectTikFinity() {
-    var ws = new WebSocket("ws://localhost:21213/");
-    ws.onmessage = function(e) { try { handleMessage(JSON.parse(e.data)); } catch(err) {} };
-    ws.onclose   = function() { setTimeout(connectTikFinity, 3000); };
-    ws.onerror   = function() { ws.close(); };
+  function connectTikFinity(){
+    var ws=new WebSocket("ws://localhost:21213/");
+    ws.onmessage=function(e){ try{handleMessage(JSON.parse(e.data));}catch(err){} };
+    ws.onclose=function(){ setTimeout(connectTikFinity,3000); };
+    ws.onerror=function(){ ws.close(); };
   }
-  function connectControl() {
-    var ws = new WebSocket("ws://localhost:21214/");
-    ws.onmessage = function(e) { try { handleMessage(JSON.parse(e.data)); } catch(err) {} };
-    ws.onclose   = function() { setTimeout(connectControl, 3000); };
-    ws.onerror   = function() { ws.close(); };
+  function connectControl(){
+    var ws=new WebSocket("ws://localhost:21214/");
+    ws.onmessage=function(e){ try{handleMessage(JSON.parse(e.data));}catch(err){} };
+    ws.onclose=function(){ setTimeout(connectControl,3000); };
+    ws.onerror=function(){ ws.close(); };
   }
+
+  /* ===== テスト/iframe 用に公開 ===== */
+  window.handleMessage=handleMessage;
+  window.galleryState=function(){
+    var done=0; for(var i=0;i<gifts.length;i++){ if((counts[gifts[i].name]||0)>=gifts[i].target) done++; }
+    return { league:league, gifts:gifts.map(function(g){return g.name;}), counts:counts, likeRanking:likeRanking,
+             messages:messages, done:done, total:gifts.length, complete:(gifts.length>0&&done===gifts.length) };
+  };
+  window.galleryReset=function(){ counts={}; giftContributors={}; persistCounts(); gifts.forEach(function(g){renderGift(g);}); completedShown=false; completeEl.className=''; updateProgress(); };
+  window.LEAGUES=LEAGUES;
 
   /* ===== 初期化 ===== */
-  loadAll();
-
-  // スロットが0件なら待機メッセージ表示
-  if (giftSlots.length === 0) {
-    var emptyDiv = document.createElement('div');
-    emptyDiv.className = 'grid-empty';
-    emptyDiv.id = 'gridEmpty';
-    emptyDiv.textContent = '🎁 TikFinityに接続中...';
-    grid.appendChild(emptyDiv);
-  }
-
-  updateHeader();
+  loadGlobals();
+  buildGrid();
   renderLikes();
   startMessageLoop();
   connectTikFinity();
