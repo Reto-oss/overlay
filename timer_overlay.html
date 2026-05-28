@@ -22,7 +22,7 @@
   }
   .timer-sec, .title-sec { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 30px 14px; }
   .timer-sec { gap:6px; }
-  .title-sec { border-left:2px solid rgba(255,0,127,0.32); min-width:520px; max-width:880px; gap:10px; }
+  .title-sec { border-left:2px solid rgba(255,0,127,0.32); min-width:580px; max-width:920px; gap:10px; }
 
   /* タイマー: 数字=ACID GREEN / ラベル=HOT PINK */
   .badge { display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:700; letter-spacing:2px; padding:3px 14px; border-radius:4px; background:rgba(255,0,127,0.14); color:#ff007f; }
@@ -32,7 +32,7 @@
 
   /* ゲームタイトル: キャプション=HOT PINK / タイトル=ACID GREEN */
   .title-cap { font-size:15px; font-weight:800; letter-spacing:3px; color:#ff007f; text-shadow:0 0 8px rgba(255,0,127,0.65); }
-  .title-name { font-size:34px; font-weight:800; line-height:1.2; color:#baff29; text-align:center; text-shadow:0 0 10px rgba(186,255,41,0.8), 0 0 20px rgba(186,255,41,0.4); word-break:break-word; overflow-wrap:anywhere; max-height:2.5em; overflow:hidden; }
+  .title-name { font-size:44px; font-weight:800; line-height:1.2; color:#baff29; text-align:center; text-shadow:0 0 10px rgba(186,255,41,0.8), 0 0 20px rgba(186,255,41,0.4); word-break:break-word; overflow-wrap:anywhere; max-height:2.5em; overflow:hidden; }
 
   /* 配信中 */
   #wrap.live { border-color:#ff007f; box-shadow:0 0 22px rgba(255,0,127,0.6), 0 0 44px rgba(186,255,41,0.25), inset 0 0 18px rgba(0,0,0,0.7); animation:breathe 3.2s ease-in-out infinite; }
@@ -41,7 +41,7 @@
   #wrap.live .dot { background:#ff007f; box-shadow:0 0 8px rgba(255,0,127,0.95), 0 0 16px rgba(255,0,127,0.7); animation:blink 1.1s ease-in-out infinite; }
   /* 待機中 */
   #wrap.idle { opacity:0.85; }
-  #wrap.idle .time { color:#6f7680; text-shadow:none; }
+  #wrap.idle .time { color:#baff29; text-shadow:0 1px 2px rgba(0,0,0,0.4); }
   #wrap.idle .label { color:#9a5f78; text-shadow:none; }
 
   @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
@@ -58,7 +58,7 @@
       <div class="label">配信経過時間</div>
     </div>
     <div class="title-sec" id="titleBox" style="display:none">
-      <div class="title-cap">🎮 NOW PLAYING</div>
+      <div class="title-cap">🎮 タイトル</div>
       <div class="title-name" id="gameTitle"></div>
     </div>
   </div>
