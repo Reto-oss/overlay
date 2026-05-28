@@ -5,15 +5,15 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: transparent; font-family: 'M PLUS Rounded 1c', sans-serif; width: 420px; padding: 6px; overflow: hidden; }
+  body { background: transparent; font-family: 'M PLUS Rounded 1c', sans-serif; width: 420px; padding: 4px; overflow: hidden; }
 
   /* ===== ヘッダー ===== */
-  .header { display: flex; align-items: center; justify-content: center; padding: 4px 12px; margin-bottom: 2px; background: #000; border: 1px solid #ff007f; border-radius: 8px; height: 48px; box-shadow: 0 0 12px #ff007f55; overflow: hidden; position: relative; }
+  .header { display: flex; align-items: center; justify-content: center; padding: 4px 12px; margin-bottom: 0; background: transparent; border: none; border-radius: 0; height: 54px; box-shadow: none; overflow: hidden; position: relative; }
   .marquee-wrap { flex: 1; overflow: visible; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; }
   .marquee-line { display: flex; align-items: center; gap: 4px; height: 100%; flex-wrap: nowrap; }
   .marquee-char {
     display: inline-block;
-    font-size: 15px;
+    font-size: 21px;
     font-weight: 900;
     letter-spacing: 1.5px;
     line-height: 1;
@@ -28,21 +28,22 @@
     100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
   }
   .header::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, #ff007f88, transparent); animation: scan 2.5s linear infinite; pointer-events: none; }
-  @keyframes scan { from{top:0} to{top:48px} }
+  @keyframes scan { from{top:0} to{top:54px} }
 
   /* ===== 進行度メーター(ヘッダー下・独立行) ===== */
   .progress-row {
     display: flex; align-items: center; gap: 10px;
-    margin-bottom: 6px; padding: 6px 10px;
+    margin-bottom: 0; padding: 6px 10px;
     background: linear-gradient(90deg, rgba(22,0,13,0.85), rgba(44,0,26,0.7), rgba(22,0,13,0.85));
-    border: 1px solid #ff007f44;
-    border-radius: 8px;
-    box-shadow: 0 0 6px #ff007f22 inset;
+    border: none;
+    border-bottom: 1px solid rgba(255,0,127,0.35);
+    border-radius: 0;
+    box-shadow: none;
   }
   .progress-label {
     font-size: 13px; font-weight: 900;
-    color: #ff007f;
-    text-shadow: 0 0 4px #ff007f88;
+    color: #baff29;
+    text-shadow: 0 0 4px #baff2988;
     letter-spacing: 1px;
     flex-shrink: 0;
     min-width: 70px;
@@ -81,9 +82,9 @@
   }
 
   /* ===== メインレイアウト ===== */
-  .main-row { display: flex; gap: 6px; align-items: flex-start; }
-  .sidebar { width: 140px; flex-shrink: 0; }
-  .like-section { background: linear-gradient(135deg, rgba(0,0,0,0.85), rgba(22,0,13,0.9)); border: 1px solid #ff007f33; border-radius: 10px; padding: 7px 8px; }
+  .main-row { display: flex; gap: 0; align-items: stretch; }
+  .sidebar { width: 140px; flex-shrink: 0; border-right: 1px solid rgba(255,0,127,0.35); }
+  .like-section { background: transparent; border: none; border-radius: 0; padding: 7px 8px; }
   .section-title { font-size: 10px; font-weight: 900; letter-spacing: 1px; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #ffffff22; }
   .section-title.magenta { text-shadow: 0 0 4px #baff29; color: #baff29; }
   .like-total { font-size: 9px; font-weight: 700; color: #baff2988; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #ffffff22; text-align: right; }
@@ -103,9 +104,9 @@
   .like-row.top1 .like-count { color: #baff29; }
 
   /* ===== ギフトグリッド ===== */
-  .grid-wrap { flex: 1; position: relative; }
+  .grid-wrap { flex: 1; position: relative; padding: 4px 4px 0 6px; }
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
-  .gift-card { position: relative; background: linear-gradient(160deg, rgba(0,0,0,0.8), rgba(12,0,8,0.85)); border: 1px solid #ffffff15; border-radius: 8px; padding: 7px 4px 5px; text-align: center; overflow: hidden; }
+  .gift-card { position: relative; background: linear-gradient(160deg, rgba(0,0,0,0.8), rgba(12,0,8,0.85)); border: 1px solid #ffffff15; border-radius: 0; padding: 7px 4px 5px; text-align: center; overflow: hidden; }
   .gift-card.lit { border-color: #baff29; background: linear-gradient(160deg, rgba(0,22,8,0.9), rgba(0,40,16,0.85)); animation: litPulse 3s ease-in-out infinite; }
   @keyframes litPulse { 0%,100%{box-shadow:0 0 6px #baff2955} 50%{box-shadow:0 0 12px #baff2988} }
   .gift-card.just-lit { animation: litBurst 0.6s ease forwards, litPulse 3s 0.6s infinite; }
@@ -163,11 +164,14 @@
     100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -60px))) scale(0.7) rotate(40deg); }
   }
   /* ===== 切替タイマーバー(次のヘッダー切替までを表示) ===== */
-  .switch-bar { height:4px; margin:0 2px 6px; background:rgba(255,255,255,0.10); border:1px solid #ffffff15; border-radius:3px; overflow:hidden; }
+  .switch-bar { height:5px; margin:0; background:rgba(255,255,255,0.10); border:none; border-radius:0; overflow:hidden; }
   .switch-bar-fill { height:100%; width:0%; background:linear-gradient(90deg,#ff007f,#baff29); box-shadow:0 0 6px rgba(186,255,41,0.45); }
+  /* ===== 全体を1枚の四角パネルに結合 ===== */
+  #panel { background: rgba(6,7,9,0.85); border: 3px solid #ff007f; border-radius: 0; overflow: hidden; box-shadow: 0 0 16px rgba(255,0,127,0.35), 0 0 26px rgba(186,255,41,0.12); }
 </style>
 </head>
 <body>
+<div id="panel">
   <div class="header">
     <div class="marquee-wrap" id="marqueeWrap"></div>
   </div>
@@ -195,6 +199,7 @@
       <div class="particle-layer" id="particleLayer"></div>
     </div>
   </div>
+</div>
 <script>
   const LOCAL_IMG_BASE = "../gifts/";
   const STORAGE_GIFT_IMAGES = 'tikfinity_gift_images_v1';
