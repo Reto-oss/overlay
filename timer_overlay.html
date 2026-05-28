@@ -12,7 +12,7 @@
 
   /* 1枚パネル（角四角・継ぎ目なし） / 配色: 黒 + HOT PINK #FF007F + ACID GREEN #BAFF29 */
   #wrap {
-    display:inline-flex; flex-direction:row; align-items:stretch;
+    display:flex; width:100%; flex-direction:row; align-items:stretch;
     background: rgba(6,7,9,0.80);
     border: 3px solid rgba(255,0,127,0.6);
     border-radius: 0;
@@ -21,8 +21,8 @@
     transition: border-color .4s, box-shadow .4s, opacity .4s;
   }
   .timer-sec, .title-sec { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 30px 14px; }
-  .timer-sec { gap:6px; }
-  .title-sec { border-left:2px solid rgba(255,0,127,0.32); min-width:400px; max-width:920px; gap:10px; }
+  .timer-sec { flex:0 0 auto; gap:6px; }
+  .title-sec { flex:1 1 0; min-width:0; border-left:2px solid rgba(255,0,127,0.32); gap:10px; }
 
   /* タイマー: 数字=ACID GREEN / ラベル=HOT PINK */
   .badge { display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:700; letter-spacing:2px; padding:3px 14px; border-radius:4px; background:rgba(255,0,127,0.14); color:#ff007f; }
