@@ -7,97 +7,60 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap');
 
-  html, body {
-    margin: 0; padding: 0; background: transparent;
-    width: 100%; height: 100%; overflow: hidden;
-    font-family: 'M PLUS Rounded 1c', sans-serif;
-  }
-  /* 左上アンカー: タイマーの位置を固定し、ゲーム名は右へ伸びる */
-  #stage {
-    width: 100%; height: 100%;
-    display: flex; align-items: flex-start; justify-content: flex-start;
-    padding: 6px; box-sizing: border-box;
-  }
-  #wrap { display: inline-flex; flex-direction: row; align-items: stretch; gap: 12px; }
+  html, body { margin:0; padding:0; background:transparent; width:100%; height:100%; overflow:hidden; font-family:'M PLUS Rounded 1c', sans-serif; }
+  /* 左上アンカー: タイマー位置を固定し、ゲーム名は右へ伸びる */
+  #stage { width:100%; height:100%; display:flex; align-items:flex-start; justify-content:flex-start; padding:6px; box-sizing:border-box; }
 
-  /* 共通ネオン箱 */
-  .box {
-    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 16px 26px 14px;
-    border-radius: 24px;
-    background: rgba(8, 10, 18, 0.62);
-    border: 3px solid rgba(41, 230, 255, 0.55);
-    box-shadow: 0 0 18px rgba(41,230,255,0.45), 0 0 34px rgba(255,79,216,0.30), inset 0 0 16px rgba(0,0,0,0.55);
+  /* 1枚に繋がったパネル（角は四角・継ぎ目なし） */
+  #wrap {
+    display:inline-flex; flex-direction:row; align-items:stretch;
+    background: rgba(8,10,18,0.66);
+    border: 3px solid rgba(41,230,255,0.55);
+    border-radius: 0;                 /* 角を四角く */
+    overflow: hidden;
+    box-shadow: 0 0 18px rgba(41,230,255,0.40), 0 0 34px rgba(255,79,216,0.25), inset 0 0 16px rgba(0,0,0,0.55);
     transition: border-color .4s, box-shadow .4s, opacity .4s;
   }
 
-  /* 左: タイマー */
-  .timer-box { gap: 6px; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 15px; font-weight: 700; letter-spacing: 2px;
-    padding: 3px 14px; border-radius: 999px;
-    background: rgba(255,255,255,0.06); color: #29e6ff;
-  }
-  .dot { width: 11px; height: 11px; border-radius: 50%; background: #555; box-shadow: none; }
-  .time {
-    font-size: 64px; font-weight: 800; line-height: 1;
-    font-variant-numeric: tabular-nums; letter-spacing: 2px;
-    color: #ffd34d;
-    text-shadow: 0 0 10px rgba(255,211,77,0.85), 0 0 22px rgba(255,168,38,0.55);
-  }
-  .label {
-    font-size: 16px; font-weight: 700; letter-spacing: 4px;
-    color: #ff7fe0; text-shadow: 0 0 8px rgba(255,79,216,0.6);
-  }
+  /* セクション（左=タイマー / 右=ゲーム名）。間は細い区切り線のみ＝1枚の連続したパネル */
+  .timer-sec, .title-sec { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 30px 14px; }
+  .timer-sec { gap:6px; }
+  .title-sec { border-left:2px solid rgba(41,230,255,0.22); min-width:300px; max-width:560px; gap:10px; }
 
-  /* 右: ゲームタイトル */
-  .title-box { gap: 10px; min-width: 200px; max-width: 380px; }
-  .title-cap {
-    font-size: 13px; font-weight: 800; letter-spacing: 3px;
-    color: #29e6ff; text-shadow: 0 0 8px rgba(41,230,255,0.6);
-  }
-  .title-name {
-    font-size: 30px; font-weight: 800; line-height: 1.15;
-    color: #ffd34d; text-align: center;
-    text-shadow: 0 0 10px rgba(255,211,77,0.8), 0 0 22px rgba(255,168,38,0.5);
-    word-break: break-word; overflow-wrap: anywhere;
-    max-height: 2.4em; overflow: hidden;
-  }
+  /* タイマー */
+  .badge { display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:700; letter-spacing:2px; padding:3px 14px; border-radius:4px; background:rgba(255,255,255,0.06); color:#29e6ff; }
+  .dot { width:11px; height:11px; border-radius:50%; background:#555; box-shadow:none; }
+  .time { font-size:64px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; letter-spacing:2px; color:#ffd34d; text-shadow:0 0 10px rgba(255,211,77,0.85), 0 0 22px rgba(255,168,38,0.55); }
+  .label { font-size:23px; font-weight:800; letter-spacing:6px; color:#ff7fe0; text-shadow:0 0 9px rgba(255,79,216,0.65); }
 
-  /* 配信中（両箱に適用） */
-  #wrap.live .box {
-    border-color: rgba(255,79,216,0.75);
-    box-shadow: 0 0 22px rgba(255,79,216,0.55), 0 0 42px rgba(41,230,255,0.40), inset 0 0 18px rgba(0,0,0,0.55);
-    animation: breathe 3.2s ease-in-out infinite;
-  }
-  #wrap.live .badge { background: rgba(255,56,96,0.18); color: #ff5a78; }
-  #wrap.live .dot {
-    background: #ff3b5c;
-    box-shadow: 0 0 8px rgba(255,59,92,0.95), 0 0 16px rgba(255,59,92,0.7);
-    animation: blink 1.1s ease-in-out infinite;
-  }
+  /* ゲームタイトル（横幅に余裕を持たせ、長い名前も折返しにくい） */
+  .title-cap { font-size:14px; font-weight:800; letter-spacing:3px; color:#29e6ff; text-shadow:0 0 8px rgba(41,230,255,0.6); }
+  .title-name { font-size:27px; font-weight:800; line-height:1.2; color:#ffd34d; text-align:center; text-shadow:0 0 10px rgba(255,211,77,0.8), 0 0 22px rgba(255,168,38,0.5); word-break:break-word; overflow-wrap:anywhere; max-height:2.5em; overflow:hidden; }
+
+  /* 配信中（パネル全体に適用） */
+  #wrap.live { border-color:rgba(255,79,216,0.75); box-shadow:0 0 22px rgba(255,79,216,0.55), 0 0 42px rgba(41,230,255,0.40), inset 0 0 18px rgba(0,0,0,0.55); animation:breathe 3.2s ease-in-out infinite; }
+  #wrap.live .title-sec { border-left-color:rgba(255,79,216,0.30); }
+  #wrap.live .badge { background:rgba(255,56,96,0.18); color:#ff5a78; }
+  #wrap.live .dot { background:#ff3b5c; box-shadow:0 0 8px rgba(255,59,92,0.95), 0 0 16px rgba(255,59,92,0.7); animation:blink 1.1s ease-in-out infinite; }
   /* 待機中 */
-  #wrap.idle .box { opacity: 0.82; }
-  #wrap.idle .time { color: #9aa3b5; text-shadow: none; }
-  #wrap.idle .label { color: #6f7891; text-shadow: none; }
+  #wrap.idle { opacity:0.85; }
+  #wrap.idle .time { color:#9aa3b5; text-shadow:none; }
+  #wrap.idle .label { color:#6f7891; text-shadow:none; }
 
   @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
-  @keyframes breathe {
-    0%,100% { box-shadow: 0 0 22px rgba(255,79,216,0.45), 0 0 42px rgba(41,230,255,0.35), inset 0 0 18px rgba(0,0,0,0.55); }
-    50%      { box-shadow: 0 0 30px rgba(255,79,216,0.70), 0 0 56px rgba(41,230,255,0.55), inset 0 0 18px rgba(0,0,0,0.55); }
-  }
+  @keyframes breathe { 0%,100%{box-shadow:0 0 22px rgba(255,79,216,0.45),0 0 42px rgba(41,230,255,0.35),inset 0 0 18px rgba(0,0,0,0.55);} 50%{box-shadow:0 0 30px rgba(255,79,216,0.70),0 0 56px rgba(41,230,255,0.55),inset 0 0 18px rgba(0,0,0,0.55);} }
+
 </style>
 </head>
 <body>
 <div id="stage">
   <div id="wrap" class="idle">
-    <div class="box timer-box">
+    <div class="timer-sec">
       <div class="badge"><span class="dot"></span><span id="badgeText">待機中</span></div>
       <div class="time"><span id="t">00:00:00</span></div>
       <div class="label">配信経過時間</div>
     </div>
-    <div class="box title-box" id="titleBox" style="display:none">
+    <div class="title-sec" id="titleBox" style="display:none">
       <div class="title-cap">🎮 NOW PLAYING</div>
       <div class="title-name" id="gameTitle"></div>
     </div>
@@ -117,8 +80,8 @@
     game:   'tikfinity_game_title_v1'
   };
 
-  var STALE_MS = 10 * 60 * 1000;   // 10分: これ以上前の残骸は再開しない
-  var GRACE_MS = 120 * 1000;       // 120秒: 楽観再開後イベント来なければリセット
+  var STALE_MS = 10 * 60 * 1000;
+  var GRACE_MS = 120 * 1000;
 
   var running = false, startMs = 0, src = 'proxy', lastEventMs = 0, graceTimer = null;
   var gameTitle = '';
@@ -128,6 +91,7 @@
   var badgeText = document.getElementById('badgeText');
   var titleBox = document.getElementById('titleBox');
   var gameTitleEl = document.getElementById('gameTitle');
+  var divider = document.getElementById('divider');
 
   function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
@@ -168,9 +132,11 @@
     if (gameTitle) {
       gameTitleEl.textContent = gameTitle;
       titleBox.style.display = '';
+      if (divider) divider.style.display = '';
     } else {
       gameTitleEl.textContent = '';
       titleBox.style.display = 'none';
+      if (divider) divider.style.display = 'none';
     }
     lsSet(LS.game, gameTitle);
   }
