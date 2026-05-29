@@ -79,11 +79,11 @@
     endedAt: 'tikfinity_timer_endedat_v1'
   };
 
-  var STALE_MS = 10 * 60 * 1000;
-  var GRACE_MS = 120 * 1000;
+  var GRACE_MS = 90 * 1000;    // この時間イベントが来なければ配信終了とみなし停止(streamEnd未受信対策)
+  var REVIVE_GAP = 60 * 1000;  // roomId不明時のみ: 終了直後この時間内のイベントは無視
 
   var running = false, startMs = 0, src = 'proxy', lastEventMs = 0, graceTimer = null;
-  var ended = false, endedAt = 0, REVIVE_GAP = 120000;  // 配信終了後この時間(ms)内のイベントは無視(残存イベントで再始動しない)
+  var ended = false, endedAt = 0, streamId = null, endedStreamId = null;  // streamId=現在の配信識別子(roomId)。変化=新配信
   var gameTitle = '';
 
   var wrap = document.getElementById('wrap');
@@ -148,7 +148,7 @@
 
   function stop(){
     running = false; startMs = 0; src = 'proxy';
-    ended = true; endedAt = Date.now();
+    ended = true; endedAt = Date.now(); endedStreamId = streamId; streamId = null;
     clearGrace();
     lsSet(LS.active, '0'); lsDel(LS.start);
     lsSet(LS.ended, '1'); lsSet(LS.endedAt, String(endedAt));
@@ -157,26 +157,38 @@
 
   function toMs(v){ v = Number(v); return v < 1e12 ? v * 1000 : v; }
 
-  function onActivity(startSec){
+  function onActivity(roomId, startSec){
     var now = Date.now();
     lastEventMs = now;
-    clearGrace();
     var ms = (startSec && isFinite(startSec) && startSec > 0) ? toMs(startSec) : 0;
-    var startTime = (ms > 0 && ms <= now + 2000 && ms > now - 24 * 3600 * 1000) ? ms : 0;
-    if (ended) {
-      if (now - endedAt <= REVIVE_GAP) { save(); return; }
-      ended = false;
-      startTime = 0;
+    var anchor = (ms > 0 && ms <= now + 2000 && ms > now - 24 * 3600 * 1000) ? ms : now;  // 配信開始の起点
+    if (roomId) {
+      if (ended && roomId === endedStreamId) return;            // 終了した配信の残存イベント → 無視
+      if (!running || roomId !== streamId) {                    // 新しい配信(roomId変化)/初回 → リセット&開始
+        startMs = anchor; src = (anchor < now - 1000) ? 'create_time' : 'proxy';
+        streamId = roomId; running = true; ended = false;
+      }
+      // 稼働中で同一roomId → 継続(startMs不変)
+    } else {
+      if (ended && (now - endedAt) < REVIVE_GAP) return;        // 識別子なし: 終了直後の残存イベント → 無視
+      if (!running) {                                           // 初回 → 開始
+        startMs = anchor; src = (anchor < now - 1000) ? 'create_time' : 'proxy';
+        running = true; ended = false;
+      }
+      // 稼働中 → 継続
     }
-    if (!running) {
-      if (startTime) { startMs = startTime; src = 'create_time'; }
-      else { startMs = now; src = 'proxy'; }
-      running = true;
-    } else if (src === 'proxy' && startTime && (startMs - startTime) >= 0 && (startMs - startTime) < 600000) {
-      startMs = startTime; src = 'create_time';
-    }
+    armGrace();   // イベント受信 → 終了みなしタイマー(GRACE_MS)を再セット
     save();
     render();
+  }
+
+  function extractRoom(msg){
+    // 配信の識別子(roomId)。値が変われば新しい配信とみなす。複数フィールド名に対応。
+    var d = msg.data || {};
+    var ri = d.roomInfo || d.room_info || d.room || null;
+    var id = d.roomId || d.room_id || msg.roomId || msg.room_id ||
+             (ri && (ri.roomId || ri.room_id || ri.id)) || null;
+    return id ? String(id) : null;
   }
 
   function extractCreate(msg){
@@ -205,22 +217,17 @@
 
     /* それ以外（connected / roomUser / member / chat / gift / like / social /
        follow / share / subscribe / liveStart 等）＝配信中の合図 */
-    onActivity(extractCreate(msg));
+    onActivity(extractRoom(msg), extractCreate(msg));
   }
 
   function loadInit(){
     clearGrace();
     applyGameTitle(lsGet(LS.game) || '');
-    ended = (lsGet(LS.ended) === '1');
-    endedAt = Number(lsGet(LS.endedAt) || 0);
-    var active = lsGet(LS.active), st = lsGet(LS.start), last = lsGet(LS.last), s = lsGet(LS.src);
-    var now = Date.now();
-    if (!ended && active === '1' && st && last && (now - Number(last)) < STALE_MS) {
-      startMs = Number(st); src = s || 'proxy'; running = true; lastEventMs = Number(last);
-      render(); armGrace();
-    } else {
-      running = false; startMs = 0; render();
-    }
+    // 再読込では前回の計測を復元しない(配信をまたいで継続させないため)。
+    // 待機中から始まり、次の配信中イベントで開始(roomInfoのcreate_timeがあれば正確な経過に合わせる)。
+    running = false; startMs = 0; src = 'proxy';
+    ended = false; streamId = null; endedStreamId = null;
+    render();
   }
 
   /* ===== WS接続（本番=21213 TikFinity / ローカル=21214 中継 両対応） ===== */
@@ -237,7 +244,7 @@
   window.handleMessage  = handleMessage;
   window.timerLoadInit  = loadInit;
   window.setGameTitle   = applyGameTitle;
-  window.timerState     = function(){ return { running: running, startMs: startMs, src: src, lastEventMs: lastEventMs, gameTitle: gameTitle, ended: ended, endedAt: endedAt }; };
+  window.timerState     = function(){ return { running: running, startMs: startMs, src: src, lastEventMs: lastEventMs, gameTitle: gameTitle, ended: ended, endedAt: endedAt, streamId: streamId }; };
 
   /* ===== 初期化 ===== */
   loadInit();
