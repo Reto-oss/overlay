@@ -74,13 +74,16 @@
     active: 'tikfinity_timer_active_v1',
     last:   'tikfinity_timer_last_v1',
     src:    'tikfinity_timer_src_v1',
-    game:   'tikfinity_game_title_v1'
+    game:   'tikfinity_game_title_v1',
+    ended:  'tikfinity_timer_ended_v1',
+    endedAt: 'tikfinity_timer_endedat_v1'
   };
 
   var STALE_MS = 10 * 60 * 1000;
   var GRACE_MS = 120 * 1000;
 
   var running = false, startMs = 0, src = 'proxy', lastEventMs = 0, graceTimer = null;
+  var ended = false, endedAt = 0, REVIVE_GAP = 120000;  // 配信終了後この時間(ms)内のイベントは無視(残存イベントで再始動しない)
   var gameTitle = '';
 
   var wrap = document.getElementById('wrap');
@@ -99,6 +102,8 @@
     lsSet(LS.active, running ? '1' : '0');
     lsSet(LS.last,   String(lastEventMs || Date.now()));
     lsSet(LS.src,    src);
+    lsSet(LS.ended,  ended ? '1' : '0');
+    lsSet(LS.endedAt, String(endedAt));
   }
 
   function two(n){ return (n < 10 ? '0' : '') + n; }
@@ -143,33 +148,43 @@
 
   function stop(){
     running = false; startMs = 0; src = 'proxy';
+    ended = true; endedAt = Date.now();
     clearGrace();
     lsSet(LS.active, '0'); lsDel(LS.start);
+    lsSet(LS.ended, '1'); lsSet(LS.endedAt, String(endedAt));
     render();
   }
 
   function toMs(v){ v = Number(v); return v < 1e12 ? v * 1000 : v; }
 
-  function onActivity(createSec){
-    lastEventMs = Date.now();
-    if (createSec && isFinite(createSec) && createSec > 0) {
-      var ms = toMs(createSec);
-      if (!running || src !== 'create_time' || Math.abs(ms - startMs) > 2000) {
-        startMs = ms; src = 'create_time'; running = true;
-      }
-    } else {
-      if (!running) { startMs = Date.now(); src = 'proxy'; running = true; }
-    }
+  function onActivity(startSec){
+    var now = Date.now();
+    lastEventMs = now;
     clearGrace();
+    var ms = (startSec && isFinite(startSec) && startSec > 0) ? toMs(startSec) : 0;
+    var startTime = (ms > 0 && ms <= now + 2000 && ms > now - 24 * 3600 * 1000) ? ms : 0;
+    if (ended) {
+      if (now - endedAt <= REVIVE_GAP) { save(); return; }
+      ended = false;
+      startTime = 0;
+    }
+    if (!running) {
+      if (startTime) { startMs = startTime; src = 'create_time'; }
+      else { startMs = now; src = 'proxy'; }
+      running = true;
+    } else if (src === 'proxy' && startTime && (startMs - startTime) >= 0 && (startMs - startTime) < 600000) {
+      startMs = startTime; src = 'create_time';
+    }
     save();
     render();
   }
 
   function extractCreate(msg){
     var d = msg.data || {};
-    var ri = d.roomInfo || d.room_info || null;
-    var c = (ri && (ri.create_time || ri.createTime)) ||
-            d.create_time || d.createTime || msg.create_time || null;
+    var ri = d.roomInfo || d.room_info ||
+             (d.room && (d.room.roomInfo || d.room.room_info)) ||
+             (d.data && (d.data.roomInfo || d.data.room_info)) || null;
+    var c = ri && (ri.create_time || ri.createTime || ri.createTimeMs);
     return c ? Number(c) : null;
   }
 
@@ -196,9 +211,11 @@
   function loadInit(){
     clearGrace();
     applyGameTitle(lsGet(LS.game) || '');
+    ended = (lsGet(LS.ended) === '1');
+    endedAt = Number(lsGet(LS.endedAt) || 0);
     var active = lsGet(LS.active), st = lsGet(LS.start), last = lsGet(LS.last), s = lsGet(LS.src);
     var now = Date.now();
-    if (active === '1' && st && last && (now - Number(last)) < STALE_MS) {
+    if (!ended && active === '1' && st && last && (now - Number(last)) < STALE_MS) {
       startMs = Number(st); src = s || 'proxy'; running = true; lastEventMs = Number(last);
       render(); armGrace();
     } else {
@@ -220,7 +237,7 @@
   window.handleMessage  = handleMessage;
   window.timerLoadInit  = loadInit;
   window.setGameTitle   = applyGameTitle;
-  window.timerState     = function(){ return { running: running, startMs: startMs, src: src, lastEventMs: lastEventMs, gameTitle: gameTitle }; };
+  window.timerState     = function(){ return { running: running, startMs: startMs, src: src, lastEventMs: lastEventMs, gameTitle: gameTitle, ended: ended, endedAt: endedAt }; };
 
   /* ===== 初期化 ===== */
   loadInit();
