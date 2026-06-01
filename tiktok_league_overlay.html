@@ -236,6 +236,32 @@
     ws.onclose=function(){ setStatus('err','切断'); if(state.auto){ clearTimeout(retry); retry=setTimeout(connect,4000); } };
   }
 
+  // 操作パネル(simulate_overlay → ws_server.py:21214)からの手動制御を受ける
+  var pws=null, pretry=null;
+  function connectPanel(){
+    try{ if(pws){ pws.onclose=null; pws.close(); } }catch(e){}
+    try{ pws=new WebSocket('ws://localhost:21214/'); }catch(e){ return; }
+    pws.onmessage=function(ev){
+      var m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+      var nm=((m.event||'')+'').toLowerCase();
+      if(nm==='kakeraset'){
+        if(m.league!=null) state.league=m.league;
+        if(m.frag!=null)   state.frag=Number(m.frag)||0;
+        if(m.shield!=null) state.shield=Number(m.shield)||0;
+        if(m.keep!=null)   state.keep=Number(m.keep)||0;
+        if(m.up1!=null)    state.up1=Number(m.up1)||0;
+        if(m.up2!=null)    state.up2=Number(m.up2)||0;
+        syncPanel(); render(); dbg('panel kakeraSet', m);
+      } else if(nm==='kakeramode'){ state.auto=!!m.auto; syncPanel(); if(state.auto) connect(); render(); }
+      else if(nm==='kakeracurrent'){ state.auto=false; state.manualCurrent=Number(m.value)||0; syncPanel(); render(); }
+      else if(nm==='kakerabase'){ state.base=Number(m.value)||0; syncPanel(); render(); }
+      else if(nm==='kakeraadd'){ state.session+=Number(m.value)||0; render(); }
+      else if(nm==='kakerareset'){ state.session=0; render(); }
+    };
+    pws.onclose=function(){ clearTimeout(pretry); pretry=setTimeout(connectPanel, 4000); };
+    pws.onerror=function(){ try{ pws.close(); }catch(e){} };
+  }
+
   window.TLO={
     setCurrent:function(n){ state.auto=false; state.manualCurrent=Number(n)||0; render(); },
     addDiamonds:function(n){ state.session+=Number(n)||0; render(); },
@@ -290,7 +316,7 @@
   $('demoBtn').onclick=function(){ if(demo){ clearInterval(demo); demo=null; $('demoBtn').textContent='▶ デモ加算'; return; }
     $('demoBtn').textContent='⏸ 停止'; demo=setInterval(function(){ state.session+=Math.round(1000+Math.random()*4000); if(!state.auto) state.manualCurrent+=2000; render(); },900); };
 
-  fromURL(); syncPanel(); render(); connect();
+  fromURL(); syncPanel(); render(); connect(); connectPanel();
 })();
 </script>
 </body>
