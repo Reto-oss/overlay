@@ -145,7 +145,7 @@
   var state = {
     league:'C3', frag:2, shield:0,
     keep:50000, up1:80000, up2:120000,
-    auto:true, wsUrl:'ws://localhost:21213/', base:0, manualCurrent:12000, debug:false,
+    auto:true, wsUrl:'ws://localhost:21213/', base:0, manualCurrent:12000, debug:false, mult:1,
     session:0
   };
   function current(){ return state.auto ? (state.base + state.session) : state.manualCurrent; }
@@ -202,7 +202,9 @@
 
   function diamondsOf(d){
     var cands=[d.diamondCount,d.diamond_count,d.diamondValue,
-      d.giftDetails&&d.giftDetails.diamondCount, d.gift&&d.gift.diamond_count,
+      d.coins,d.coinCount,d.coin_count,d.coinValue,
+      d.giftDetails&&d.giftDetails.diamondCount, d.giftDetails&&d.giftDetails.coins,
+      d.gift&&d.gift.diamond_count, d.gift&&d.gift.coins,
       d.extendedGiftInfo&&d.extendedGiftInfo.diamond_count];
     for(var i=0;i<cands.length;i++){ var v=cands[i]; if(typeof v==='number'&&v>0) return v; }
     return 0;
@@ -212,7 +214,7 @@
     var repeatEnd = (d.repeatEnd!=null?d.repeatEnd:d.repeat_end);
     if(giftType===1 && repeatEnd===false){ dbg('streak in progress, skip'); return; }
     var per=diamondsOf(d); var rep=(d.repeatCount!=null?d.repeatCount:(d.repeat_count!=null?d.repeat_count:1));
-    var add=per*rep;
+    var add=per*rep*(state.mult||1);
     if(add>0){ state.session+=add; dbg('gift +',add,'(per',per,'x',rep,') total',state.session); render(); }
     else dbg('gift had no diamond value', d);
   }
@@ -249,6 +251,7 @@
     if(p.has('league')) state.league=p.get('league');
     num('frag','frag'); num('shield','shield'); num('keep','keep'); num('up1','up1'); num('up2','up2');
     num('base','base'); num('current','manualCurrent');
+    if(p.has('mult')) state.mult=Number(p.get('mult'))||1;
     if(p.has('auto')) state.auto=p.get('auto')!=='0';
     if(p.has('ws')) state.wsUrl=p.get('ws');
     if(p.has('debug')) state.debug=p.get('debug')==='1';
@@ -257,7 +260,7 @@
     var p=new URLSearchParams();
     p.set('league',state.league); p.set('frag',state.frag); p.set('shield',state.shield);
     p.set('keep',state.keep); p.set('up1',state.up1); p.set('up2',state.up2);
-    p.set('auto',state.auto?1:0); p.set('base',state.base); p.set('ws',state.wsUrl);
+    p.set('auto',state.auto?1:0); p.set('base',state.base); p.set('ws',state.wsUrl); p.set('mult',state.mult);
     if(!state.auto) p.set('current',state.manualCurrent);
     return location.origin+location.pathname+'?'+p.toString();
   }
