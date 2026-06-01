@@ -68,47 +68,39 @@
 (function () {
   "use strict";
 
-  /* ===== localStorage キー（オリジン毎に別管理） ===== */
+  /* ===== localStorage キー（このオーバーレイのオリジン内で状態を保持） =====
+     ★ソース(ブラウザ)が再読込されても計測を継続させるために永続化する。
+       手動でリセット/停止するまで勝手に消えない。 */
   var LS = {
-    start:  'tikfinity_timer_start_v1',
-    active: 'tikfinity_timer_active_v1',
-    last:   'tikfinity_timer_last_v1',
-    src:    'tikfinity_timer_src_v1',
-    game:   'tikfinity_game_title_v1',
-    ended:  'tikfinity_timer_ended_v1',
-    endedAt: 'tikfinity_timer_endedat_v1'
+    running: 'tikfinity_timer_running_v2',
+    start:   'tikfinity_timer_start_v2',   // running中: 経過 = Date.now() - start（絶対時刻アンカー）
+    paused:  'tikfinity_timer_paused_v2',  // 一時停止/待機中に表示する凍結経過ms
+    game:    'tikfinity_game_title_v1'
   };
 
-  var GRACE_MS = 90 * 1000;    // この時間イベントが来なければ配信終了とみなし停止(streamEnd未受信対策)
-  var REVIVE_GAP = 60 * 1000;  // roomId不明時のみ: 終了直後この時間内のイベントは無視
-
-  var running = false, startMs = 0, src = 'proxy', lastEventMs = 0, graceTimer = null;
-  var ended = false, endedAt = 0, streamId = null, endedStreamId = null;  // streamId=現在の配信識別子(roomId)。変化=新配信
+  var running  = false;  // 計測中か
+  var startMs  = 0;      // running中の起点(絶対時刻)。経過 = now - startMs
+  var pausedMs = 0;      // 一時停止/待機中に表示する経過ms
   var gameTitle = '';
 
-  var wrap = document.getElementById('wrap');
-  var tEl = document.getElementById('t');
-  var badgeText = document.getElementById('badgeText');
-  var titleBox = document.getElementById('titleBox');
+  var wrap        = document.getElementById('wrap');
+  var tEl         = document.getElementById('t');
+  var badgeText   = document.getElementById('badgeText');
+  var titleBox    = document.getElementById('titleBox');
   var gameTitleEl = document.getElementById('gameTitle');
-  var divider = document.getElementById('divider');
 
   function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
-  function lsDel(k){ try { localStorage.removeItem(k); } catch(e){} }
 
   function save(){
-    lsSet(LS.start,  String(startMs));
-    lsSet(LS.active, running ? '1' : '0');
-    lsSet(LS.last,   String(lastEventMs || Date.now()));
-    lsSet(LS.src,    src);
-    lsSet(LS.ended,  ended ? '1' : '0');
-    lsSet(LS.endedAt, String(endedAt));
+    lsSet(LS.running, running ? '1' : '0');
+    lsSet(LS.start,   String(startMs));
+    lsSet(LS.paused,  String(pausedMs));
   }
 
   function two(n){ return (n < 10 ? '0' : '') + n; }
   function fmt(ms){
-    if (ms < 0) ms = 0;
+    if (!isFinite(ms) || ms < 0) ms = 0;
     var s = Math.floor(ms / 1000);
     var h = Math.floor(s / 3600);
     var m = Math.floor((s % 3600) / 60);
@@ -116,11 +108,17 @@
     return two(h) + ':' + two(m) + ':' + two(ss);
   }
 
+  function elapsed(){ return running ? (Date.now() - startMs) : pausedMs; }
+
   function render(){
     if (running) {
       wrap.className = 'live';
       badgeText.textContent = 'LIVE';
       tEl.textContent = fmt(Date.now() - startMs);
+    } else if (pausedMs > 0) {
+      wrap.className = 'idle';
+      badgeText.textContent = '一時停止';
+      tEl.textContent = fmt(pausedMs);
     } else {
       wrap.className = 'idle';
       badgeText.textContent = '待機中';
@@ -128,109 +126,63 @@
     }
   }
 
-  /* ===== ゲームタイトル（タイマーの稼働状態とは独立） ===== */
+  /* ===== ゲームタイトル（タイマーの稼働状態とは独立。既存仕様のまま） ===== */
   function applyGameTitle(title){
     gameTitle = (title == null ? '' : String(title)).trim();
     if (gameTitle) {
       gameTitleEl.textContent = gameTitle;
       titleBox.style.display = '';
-      if (divider) divider.style.display = '';
     } else {
       gameTitleEl.textContent = '';
       titleBox.style.display = 'none';
-      if (divider) divider.style.display = 'none';
     }
     lsSet(LS.game, gameTitle);
   }
 
-  function clearGrace(){ if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; } }
-  function armGrace(){ clearGrace(); graceTimer = setTimeout(stop, GRACE_MS); }
-
-  function stop(){
-    running = false; startMs = 0; src = 'proxy';
-    ended = true; endedAt = Date.now(); endedStreamId = streamId; streamId = null;
-    clearGrace();
-    lsSet(LS.active, '0'); lsDel(LS.start);
-    lsSet(LS.ended, '1'); lsSet(LS.endedAt, String(endedAt));
-    render();
-  }
-
-  function toMs(v){ v = Number(v); return v < 1e12 ? v * 1000 : v; }
-
-  function onActivity(roomId, startSec){
-    var now = Date.now();
-    lastEventMs = now;
-    var ms = (startSec && isFinite(startSec) && startSec > 0) ? toMs(startSec) : 0;
-    var anchor = (ms > 0 && ms <= now + 2000 && ms > now - 24 * 3600 * 1000) ? ms : now;  // 配信開始の起点
-    if (roomId) {
-      if (ended && roomId === endedStreamId) return;            // 終了した配信の残存イベント → 無視
-      if (!running || roomId !== streamId) {                    // 新しい配信(roomId変化)/初回 → リセット&開始
-        startMs = anchor; src = (anchor < now - 1000) ? 'create_time' : 'proxy';
-        streamId = roomId; running = true; ended = false;
-      }
-      // 稼働中で同一roomId → 継続(startMs不変)
+  /* ===== タイマー制御：localhost(コントロールパネル経由 ws://localhost:21214)から
+     受け取った状態だけで動作する。配信イベントによる自動スタート/自動停止/自動リセットは廃止。
+     メッセージ形式: { event:'timerControl', running:<bool>, elapsedMs:<int>, at:<epoch ms> }
+       running  … 計測中にするか
+       elapsedMs… 時刻 at の時点での経過ミリ秒
+       at       … その経過を測定したパネル側の絶対時刻(省略時は受信時刻)
+     パネルが「真の状態」を保持し、ここはそれを忠実に再現するだけ。 */
+  function applyTimerControl(msg){
+    var isRun = !!msg.running;
+    var el = Number(msg.elapsedMs); if (!isFinite(el) || el < 0) el = 0;
+    var at = Number(msg.at);        if (!isFinite(at) || at <= 0) at = Date.now();
+    if (isRun) {
+      startMs = at - el;   // 絶対起点。メッセージ到達が多少遅れても経過は正しく進む
+      running = true;
     } else {
-      if (ended && (now - endedAt) < REVIVE_GAP) return;        // 識別子なし: 終了直後の残存イベント → 無視
-      if (!running) {                                           // 初回 → 開始
-        startMs = anchor; src = (anchor < now - 1000) ? 'create_time' : 'proxy';
-        running = true; ended = false;
-      }
-      // 稼働中 → 継続
+      pausedMs = el;
+      running = false;
     }
-    armGrace();   // イベント受信 → 終了みなしタイマー(GRACE_MS)を再セット
     save();
     render();
-  }
-
-  function extractRoom(msg){
-    // 配信の識別子(roomId)。値が変われば新しい配信とみなす。複数フィールド名に対応。
-    var d = msg.data || {};
-    var ri = d.roomInfo || d.room_info || d.room || null;
-    var id = d.roomId || d.room_id || msg.roomId || msg.room_id ||
-             (ri && (ri.roomId || ri.room_id || ri.id)) || null;
-    return id ? String(id) : null;
-  }
-
-  function extractCreate(msg){
-    var d = msg.data || {};
-    var ri = d.roomInfo || d.room_info ||
-             (d.room && (d.room.roomInfo || d.room.room_info)) ||
-             (d.data && (d.data.roomInfo || d.data.room_info)) || null;
-    var c = ri && (ri.create_time || ri.createTime || ri.createTimeMs);
-    return c ? Number(c) : null;
   }
 
   function handleMessage(msg){
     if (!msg || !msg.event) return;
     var ev = msg.event;
-
-    /* ゲームタイトル設定 → タイマーの開始/停止には影響させない */
-    if (ev === 'setGameTitle') { applyGameTitle(msg.title); return; }
-
-    /* 配信終了系 → 停止リセット */
-    if (ev === 'streamEnd' || ev === 'liveEnd' || ev === 'disconnected') { stop(); return; }
-
-    /* ギフトオーバーレイ用の制御/設定イベントはタイマー開始の合図にしない */
-    if (ev === 'config' || ev === 'lightUp' || ev === 'lightOff' ||
-        ev === 'resetAll' || ev === 'resetLikes' || ev === 'updateMessages' ||
-        ev === 'setGameTitle') return;
-
-    /* それ以外（connected / roomUser / member / chat / gift / like / social /
-       follow / share / subscribe / liveStart 等）＝配信中の合図 */
-    onActivity(extractRoom(msg), extractCreate(msg));
+    if (ev === 'timerControl') { applyTimerControl(msg); return; }
+    if (ev === 'setGameTitle')  { applyGameTitle(msg.title); return; }
+    /* それ以外(gift/like/chat/roomUser/connected/streamEnd/config 等)は
+       タイマーに一切影響させない＝視聴者アクションや配信検知で勝手にリセット/停止しない。 */
   }
 
   function loadInit(){
-    clearGrace();
     applyGameTitle(lsGet(LS.game) || '');
-    // 再読込では前回の計測を復元しない(配信をまたいで継続させないため)。
-    // 待機中から始まり、次の配信中イベントで開始(roomInfoのcreate_timeがあれば正確な経過に合わせる)。
-    running = false; startMs = 0; src = 'proxy';
-    ended = false; streamId = null; endedStreamId = null;
+    /* ★再読込されても前回状態を復元して継続（手動リセットまで継続） */
+    running  = lsGet(LS.running) === '1';
+    startMs  = Number(lsGet(LS.start))  || 0;
+    pausedMs = Number(lsGet(LS.paused)) || 0;
+    if (running && (!startMs || startMs > Date.now() + 2000)) startMs = Date.now(); // 異常値ガード
     render();
   }
 
-  /* ===== WS接続（本番=21213 TikFinity / ローカル=21214 中継 両対応） ===== */
+  /* ===== WS接続 =====
+     21214 = コントロールパネル中継(ここからtimerControl/setGameTitleを受信＝主役)。
+     21213 = 本番TikFinity(接続は維持するがタイマーには使わない)。 */
   function connect(url){
     var ws;
     try { ws = new WebSocket(url); }
@@ -241,16 +193,16 @@
   }
 
   /* ===== テスト/iframe 用に公開 ===== */
-  window.handleMessage  = handleMessage;
-  window.timerLoadInit  = loadInit;
-  window.setGameTitle   = applyGameTitle;
-  window.timerState     = function(){ return { running: running, startMs: startMs, src: src, lastEventMs: lastEventMs, gameTitle: gameTitle, ended: ended, endedAt: endedAt, streamId: streamId }; };
+  window.handleMessage = handleMessage;
+  window.timerLoadInit = loadInit;
+  window.setGameTitle  = applyGameTitle;
+  window.timerState    = function(){ return { running: running, startMs: startMs, pausedMs: pausedMs, elapsedMs: elapsed(), gameTitle: gameTitle }; };
 
   /* ===== 初期化 ===== */
   loadInit();
   setInterval(render, 250);
-  connect("ws://localhost:21213/");
   connect("ws://localhost:21214/");
+  connect("ws://localhost:21213/");
 })();
 </script>
 </body>
