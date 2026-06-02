@@ -40,7 +40,6 @@
   #fragRow{display:flex; align-items:center; justify-content:center; gap:5px; margin-bottom:10px;}
   .frag{font-size:22px; filter:grayscale(1) opacity(.35); transition:.3s} .frag.on{filter:none; animation:pop .4s ease}
   @keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
-  #shield{margin-left:6px; font-size:20px; opacity:.9}
   #headLabel{text-align:center; font-weight:800; font-size:23px; color:var(--ink); margin-top:2px;}
   #bigWrap{text-align:center; line-height:1; margin:2px 0 6px;}
   #ato{font-size:26px; font-weight:800; color:#8a6fb0; vertical-align:18px; margin-right:4px;}
@@ -89,7 +88,6 @@
   <div class="top"><span id="leagueBadge"><span>👑</span><span id="leagueName">C3</span> リーグ</span></div>
   <div id="fragRow">
     <span class="frag">🔶</span><span class="frag">🔶</span><span class="frag">🔶</span><span class="frag">🔶</span>
-    <span id="shield">🛡️×0</span>
   </div>
   <div id="headLabel">欠片キープまで</div>
   <div id="bigWrap"><span id="ato">あと</span><span id="bigNum">0</span><span id="unit">💎</span></div>
@@ -107,10 +105,7 @@
   <h3>① 基準ライン（手入力）</h3>
   <p class="note">アプリのライブ画面で見える数値。キープ＝欠片を失わないライン、+1/+2＝昇格かけら獲得ライン。ここは自動取得できないため必ず手入力。</p>
   <label>リーグ名</label><input type="text" id="i_league" value="C3">
-  <div class="row2">
-    <div><label>所持かけら(0-3)</label><input type="number" id="i_frag" value="2" min="0" max="3"></div>
-    <div><label>シールド数</label><input type="number" id="i_shield" value="0" min="0" max="10"></div>
-  </div>
+  <label>所持かけら(0-3)</label><input type="number" id="i_frag" value="2" min="0" max="3">
   <label>キープライン 💎</label><input type="number" id="i_keep" value="50000">
   <div class="row2">
     <div><label>+1ライン 💎</label><input type="number" id="i_up1" value="80000"></div>
@@ -143,7 +138,7 @@
   var card = $('card');
 
   var state = {
-    league:'C3', frag:2, shield:0,
+    league:'C3', frag:2,
     keep:50000, up1:80000, up2:120000,
     auto:true, wsUrl:'ws://localhost:21213/', base:0, manualCurrent:12000, debug:false, mult:1,
     session:0
@@ -174,7 +169,6 @@
     $('leagueName').textContent=state.league;
     var fr=document.querySelectorAll('.frag');
     for(var i=0;i<fr.length;i++){ fr[i].classList.toggle('on', i<state.frag); }
-    $('shield').textContent='🛡️×'+state.shield;
     var h=headline(c); card.className=h.st;
     $('headLabel').textContent=h.label;
     $('ato').style.display=h.remain>0?'':'none'; tween(h.remain);
@@ -247,7 +241,6 @@
       if(nm==='kakeraset'){
         if(m.league!=null) state.league=m.league;
         if(m.frag!=null)   state.frag=Number(m.frag)||0;
-        if(m.shield!=null) state.shield=Number(m.shield)||0;
         if(m.keep!=null)   state.keep=Number(m.keep)||0;
         if(m.up1!=null)    state.up1=Number(m.up1)||0;
         if(m.up2!=null)    state.up2=Number(m.up2)||0;
@@ -275,7 +268,7 @@
     var p=new URLSearchParams(location.search);
     function num(k,t){ if(p.has(k)) state[t]=Number(p.get(k))||0; }
     if(p.has('league')) state.league=p.get('league');
-    num('frag','frag'); num('shield','shield'); num('keep','keep'); num('up1','up1'); num('up2','up2');
+    num('frag','frag'); num('keep','keep'); num('up1','up1'); num('up2','up2');
     num('base','base'); num('current','manualCurrent');
     if(p.has('mult')) state.mult=Number(p.get('mult'))||1;
     if(p.has('auto')) state.auto=p.get('auto')!=='0';
@@ -284,14 +277,14 @@
   }
   function toURL(){
     var p=new URLSearchParams();
-    p.set('league',state.league); p.set('frag',state.frag); p.set('shield',state.shield);
+    p.set('league',state.league); p.set('frag',state.frag);
     p.set('keep',state.keep); p.set('up1',state.up1); p.set('up2',state.up2);
     p.set('auto',state.auto?1:0); p.set('base',state.base); p.set('ws',state.wsUrl); p.set('mult',state.mult);
     if(!state.auto) p.set('current',state.manualCurrent);
     return location.origin+location.pathname+'?'+p.toString();
   }
   function syncPanel(){
-    $('i_league').value=state.league; $('i_frag').value=state.frag; $('i_shield').value=state.shield;
+    $('i_league').value=state.league; $('i_frag').value=state.frag;
     $('i_keep').value=state.keep; $('i_up1').value=state.up1; $('i_up2').value=state.up2;
     $('i_auto').checked=state.auto; $('i_wsurl').value=state.wsUrl; $('i_base').value=state.base;
     $('i_current').value=state.manualCurrent; $('i_debug').checked=state.debug;
@@ -300,7 +293,7 @@
 
   $('gear').onclick=function(){ $('panel').classList.toggle('open'); };
   $('applyBtn').onclick=function(){
-    state.league=$('i_league').value||'C3'; state.frag=+$('i_frag').value; state.shield=+$('i_shield').value;
+    state.league=$('i_league').value||'C3'; state.frag=+$('i_frag').value;
     state.keep=+$('i_keep').value; state.up1=+$('i_up1').value; state.up2=+$('i_up2').value;
     var wasAuto=state.auto, oldUrl=state.wsUrl;
     state.auto=$('i_auto').checked; state.wsUrl=$('i_wsurl').value||'ws://localhost:21213/';
