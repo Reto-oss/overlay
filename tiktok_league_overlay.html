@@ -278,7 +278,11 @@
       if(nm==='kakeraset'){
         if(m.league!=null) state.league=m.league;
         if(m.frag!=null)   state.frag=Number(m.frag)||0;
-        if(m.goal!=null)   state.goal=Number(m.goal)||0;
+        if(m.goal!=null){
+          var ng=Number(m.goal)||0;
+          if(ng!==state.goal){ state.session=0; state.base=0; state.manualCurrent=0; } // 目標を入れ直したら現在ダイヤ(自動+手入力)を0にして新目標へ0からカウント
+          state.goal=ng;
+        }
         syncPanel(); render(); dbg('panel kakeraSet', m);
       } else if(nm==='kakeralabel'){ state.labelMode=(m.mode||'keep'); syncPanel(); render(); dbg('panel label', state.labelMode); }
       else if(nm==='kakeramode'){ state.auto=!!m.auto; syncPanel(); if(state.auto) connect(); render(); }
