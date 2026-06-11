@@ -3,63 +3,110 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>配信経過時間＋ゲームタイトル オーバーレイ</title>
+<title>テキスト＋配信経過時間＋ゲームタイトル オーバーレイ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap');
+  /* ============================================================
+     配色: 黒 + HOT PINK #FF007F + ACID GREEN #BAFF29
+     構成: ①ヘッダー切替テキスト(マーキー) ②切替バー
+           ③配信経過時間タイマー ④ゲームタイトル
+     ※ギフトギャラリー/いいねランキングは廃止
+     ============================================================ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: transparent; font-family: 'M PLUS Rounded 1c', sans-serif; overflow: hidden; }
+  /* ソース枠の幅・高さいっぱいに表示(LIVE Studioのソースサイズに自動フィット、左上アンカー) */
+  #stage { width: 100%; height: 100%; display: flex; align-items: flex-start; justify-content: flex-start; padding: 6px; }
 
-  html, body { margin:0; padding:0; background:transparent; width:100%; height:100%; overflow:hidden; font-family:'M PLUS Rounded 1c', sans-serif; }
-  #stage { width:100%; height:100%; display:flex; align-items:flex-start; justify-content:flex-start; padding:6px; box-sizing:border-box; }
-
-  /* 1枚パネル（角四角・継ぎ目なし） / 配色: 黒 + HOT PINK #FF007F + ACID GREEN #BAFF29 */
-  #wrap {
-    display:flex; width:100%; flex-direction:row; align-items:stretch;
-    background: rgba(6,7,9,0.80);
+  /* ===== 全体を1枚の四角パネルに結合(幅はソース枠いっぱい) ===== */
+  #panel {
+    width: 100%;
+    background: rgba(6,7,9,0.85);
     border: 3px solid rgba(255,0,127,0.6);
     border-radius: 0;
     overflow: hidden;
-    box-shadow: 0 0 18px rgba(255,0,127,0.40), 0 0 32px rgba(186,255,41,0.16), inset 0 0 16px rgba(0,0,0,0.7);
-    transition: border-color .4s, box-shadow .4s, opacity .4s;
+    box-shadow: 0 0 16px rgba(255,0,127,0.35), 0 0 26px rgba(186,255,41,0.12), inset 0 0 16px rgba(0,0,0,0.7);
+    transition: border-color .4s, box-shadow .4s;
   }
-  .timer-sec, .title-sec { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 30px 14px; }
-  .timer-sec { flex:0 0 auto; gap:6px; }
-  .title-sec { flex:1 1 0; min-width:0; border-left:2px solid rgba(255,0,127,0.32); gap:10px; }
+  /* 配信中(タイマー稼働)はパネル全体が呼吸する */
+  #panel.live { border-color: #ff007f; box-shadow: 0 0 22px rgba(255,0,127,0.6), 0 0 44px rgba(186,255,41,0.25), inset 0 0 18px rgba(0,0,0,0.7); animation: breathe 3.2s ease-in-out infinite; }
+  #panel.idle { }
+  @keyframes breathe {
+    0%,100% { box-shadow: 0 0 22px rgba(255,0,127,0.45), 0 0 40px rgba(186,255,41,0.18), inset 0 0 18px rgba(0,0,0,0.7); }
+    50%     { box-shadow: 0 0 32px rgba(255,0,127,0.75), 0 0 56px rgba(186,255,41,0.30), inset 0 0 18px rgba(0,0,0,0.7); }
+  }
+
+  /* ===== ①ヘッダー(切替テキスト・マーキー) ===== */
+  .header { display: flex; align-items: center; justify-content: center; padding: 6px 12px; height: 58px; background: transparent; overflow: hidden; position: relative; }
+  .marquee-wrap { flex: 1; overflow: visible; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; }
+  .marquee-line { display: flex; align-items: center; gap: 4px; height: 100%; flex-wrap: nowrap; }
+  .marquee-char {
+    display: inline-block;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    text-shadow: 0 0 6px currentColor;
+    opacity: 0;
+    transform: translateY(10px) scale(0.5);
+    animation: charPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes charPop {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.5) rotate(-8deg); }
+    60%  { opacity: 1; transform: translateY(0) scale(1.05) rotate(3deg); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+  }
+  .header::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, #ff007f88, transparent); animation: scan 2.5s linear infinite; pointer-events: none; }
+  @keyframes scan { from { top: 0 } to { top: 58px } }
+
+  /* ===== ②切替タイマーバー(次のメッセージ切替までを表示) ===== */
+  .switch-bar { height: 5px; margin: 0; background: rgba(255,255,255,0.10); border: none; border-radius: 0; overflow: hidden; }
+  .switch-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff007f, #baff29); box-shadow: 0 0 6px rgba(186,255,41,0.45); }
+
+  /* ===== ③④ タイマー＋ゲームタイトル行 ===== */
+  .body-row { display: flex; flex-direction: row; align-items: stretch; border-top: 1px solid rgba(255,0,127,0.35); }
+  .timer-sec, .title-sec { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 30px 14px; }
+  .timer-sec { flex: 0 0 auto; gap: 6px; }
+  .title-sec { flex: 1 1 0; min-width: 0; border-left: 2px solid rgba(255,0,127,0.32); gap: 10px; }
 
   /* タイマー: 数字=ACID GREEN / ラベル=HOT PINK */
-  .badge { display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:700; letter-spacing:2px; padding:3px 14px; border-radius:4px; background:rgba(255,0,127,0.14); color:#ff007f; }
-  .dot { width:11px; height:11px; border-radius:50%; background:#555; box-shadow:none; }
-  .time { font-size:64px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; letter-spacing:2px; color:#baff29; text-shadow:0 0 10px rgba(186,255,41,0.85), 0 0 22px rgba(186,255,41,0.45); }
-  .label { font-size:23px; font-weight:800; letter-spacing:6px; color:#ff007f; text-shadow:0 0 9px rgba(255,0,127,0.65); }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; letter-spacing: 2px; padding: 3px 14px; border-radius: 4px; background: rgba(255,0,127,0.14); color: #ff007f; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #555; }
+  .time { font-size: 64px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 2px; color: #baff29; text-shadow: 0 0 10px rgba(186,255,41,0.85), 0 0 22px rgba(186,255,41,0.45); }
+  .label { font-size: 23px; font-weight: 800; letter-spacing: 6px; color: #ff007f; text-shadow: 0 0 9px rgba(255,0,127,0.65); }
 
   /* ゲームタイトル: キャプション=HOT PINK / タイトル=ACID GREEN */
-  .title-cap { width:100%; text-align:center; font-size:28px; font-weight:800; letter-spacing:3px; color:#ff007f; text-shadow:0 0 8px rgba(255,0,127,0.65); }
-  .title-name { width:100%; font-size:52px; font-weight:800; line-height:1.2; color:#baff29; text-align:center; text-shadow:0 0 10px rgba(186,255,41,0.8), 0 0 20px rgba(186,255,41,0.4); word-break:break-word; overflow-wrap:anywhere; max-height:2.5em; overflow:hidden; }
+  .title-cap { width: 100%; text-align: center; font-size: 28px; font-weight: 800; letter-spacing: 3px; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.65); }
+  .title-name { width: 100%; font-size: 52px; font-weight: 800; line-height: 1.2; color: #baff29; text-align: center; text-shadow: 0 0 10px rgba(186,255,41,0.8), 0 0 20px rgba(186,255,41,0.4); word-break: break-word; overflow-wrap: anywhere; max-height: 2.5em; overflow: hidden; }
 
-  /* 配信中 */
-  #wrap.live { border-color:#ff007f; box-shadow:0 0 22px rgba(255,0,127,0.6), 0 0 44px rgba(186,255,41,0.25), inset 0 0 18px rgba(0,0,0,0.7); animation:breathe 3.2s ease-in-out infinite; }
-  #wrap.live .title-sec { border-left-color:rgba(255,0,127,0.45); }
-  #wrap.live .badge { background:rgba(255,0,127,0.22); color:#ff007f; }
-  #wrap.live .dot { background:#ff007f; box-shadow:0 0 8px rgba(255,0,127,0.95), 0 0 16px rgba(255,0,127,0.7); animation:blink 1.1s ease-in-out infinite; }
+  /* 配信中の強調 */
+  #panel.live .badge { background: rgba(255,0,127,0.22); color: #ff007f; }
+  #panel.live .dot { background: #ff007f; box-shadow: 0 0 8px rgba(255,0,127,0.95), 0 0 16px rgba(255,0,127,0.7); animation: blink 1.1s ease-in-out infinite; }
+  #panel.live .title-sec { border-left-color: rgba(255,0,127,0.45); }
   /* 待機中 */
-  #wrap.idle { opacity:0.85; }
-  #wrap.idle .time { color:#baff29; text-shadow:0 1px 2px rgba(0,0,0,0.4); }
-  #wrap.idle .label { color:#9a5f78; text-shadow:none; }
-
-  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
-  @keyframes breathe { 0%,100%{box-shadow:0 0 22px rgba(255,0,127,0.45),0 0 40px rgba(186,255,41,0.18),inset 0 0 18px rgba(0,0,0,0.7);} 50%{box-shadow:0 0 32px rgba(255,0,127,0.75),0 0 56px rgba(186,255,41,0.30),inset 0 0 18px rgba(0,0,0,0.7);} }
-
+  #panel.idle .label { color: #9a5f78; text-shadow: none; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
 </style>
 </head>
 <body>
 <div id="stage">
-  <div id="wrap" class="idle">
-    <div class="timer-sec">
-      <div class="badge"><span class="dot"></span><span id="badgeText">待機中</span></div>
-      <div class="time"><span id="t">00:00:00</span></div>
-      <div class="label">配信経過時間</div>
+  <div id="panel" class="idle">
+    <!-- ① 切替テキスト(マーキー) -->
+    <div class="header">
+      <div class="marquee-wrap" id="marqueeWrap"></div>
     </div>
-    <div class="title-sec" id="titleBox" style="display:none">
-      <div class="title-cap">🎮 タイトル</div>
-      <div class="title-name" id="gameTitle"></div>
+    <!-- ② 切替バー -->
+    <div class="switch-bar"><div class="switch-bar-fill" id="switchBarFill"></div></div>
+    <!-- ③④ タイマー + ゲームタイトル -->
+    <div class="body-row">
+      <div class="timer-sec">
+        <div class="badge"><span class="dot"></span><span id="badgeText">待機中</span></div>
+        <div class="time"><span id="t">00:00:00</span></div>
+        <div class="label">配信経過時間</div>
+      </div>
+      <div class="title-sec" id="titleBox" style="display:none">
+        <div class="title-cap">🎮 タイトル</div>
+        <div class="title-name" id="gameTitle"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -68,22 +115,42 @@
 (function () {
   "use strict";
 
-  /* ===== localStorage キー（このオーバーレイのオリジン内で状態を保持） =====
-     ★ソース(ブラウザ)が再読込されても計測を継続させるために永続化する。
-       手動でリセット/停止するまで勝手に消えない。 */
+  /* ============================================================
+     localStorage キー
+       ・テキスト(切替メッセージ) … 旧 combined_overlay と同一キーを維持
+       ・タイマー / ゲームタイトル … 旧 timer_overlay と同一キーを維持
+     同一オリジンで読み込めば、保存済みのメッセージ・タイマー状態を
+     そのまま引き継ぐ(手動リセットまで継続)。
+     ============================================================ */
+  var STORAGE_MESSAGES = 'tikfinity_header_messages_v1';
   var LS = {
     running: 'tikfinity_timer_running_v2',
-    start:   'tikfinity_timer_start_v2',   // running中: 経過 = Date.now() - start（絶対時刻アンカー）
+    start:   'tikfinity_timer_start_v2',   // running中: 経過 = Date.now() - start
     paused:  'tikfinity_timer_paused_v2',  // 一時停止/待機中に表示する凍結経過ms
     game:    'tikfinity_game_title_v1'
   };
 
-  var running  = false;  // 計測中か
-  var startMs  = 0;      // running中の起点(絶対時刻)。経過 = now - startMs
-  var pausedMs = 0;      // 一時停止/待機中に表示する経過ms
+  /* ===== ① 切替テキスト(マーキー) ===== */
+  // ※下記は「仮」のデフォルト。コントロールパネル(updateMessages)で上書きされ、
+  //   保存済みメッセージがあればそちらが優先される。実際の文言は差し替え推奨。
+  var DEFAULT_MESSAGES = [
+    { text: "ようこそ！",            color: "#baff29" },
+    { text: "コメント大歓迎♪",       color: "#baff29" },
+    { text: "フォローしてね✨",       color: "#baff29" }
+  ];
+  var MSG_INTERVAL_MS = 15000;
+
+  var messages      = DEFAULT_MESSAGES.slice();
+  var currentMsgIdx = 0;
+  var msgTimer      = null;
+
+  /* ===== ③④ タイマー / ゲームタイトル状態 ===== */
+  var running   = false;  // 計測中か
+  var startMs   = 0;      // running中の起点(絶対時刻)。経過 = now - startMs
+  var pausedMs  = 0;      // 一時停止/待機中に表示する経過ms
   var gameTitle = '';
 
-  var wrap        = document.getElementById('wrap');
+  var panel       = document.getElementById('panel');
   var tEl         = document.getElementById('t');
   var badgeText   = document.getElementById('badgeText');
   var titleBox    = document.getElementById('titleBox');
@@ -91,13 +158,83 @@
 
   function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  function getQuery(name){ try { return new URLSearchParams(location.search).get(name); } catch(e){ return null; } }
 
+  /* ============================================================
+     ① 切替テキスト ロジック
+     ============================================================ */
+  function persistMessages() {
+    try { localStorage.setItem(STORAGE_MESSAGES, JSON.stringify(messages)); } catch (e) {}
+  }
+  function loadMessages() {
+    try {
+      var m = localStorage.getItem(STORAGE_MESSAGES);
+      if (m) {
+        var arr = JSON.parse(m);
+        if (Array.isArray(arr) && arr.length > 0) messages = arr;
+      }
+    } catch (e) {}
+  }
+  function resetSwitchBar() {
+    var f = document.getElementById('switchBarFill');
+    if (!f) return;
+    if (messages.length <= 1) { f.style.transition = 'none'; f.style.width = '0%'; return; }
+    f.style.transition = 'none';
+    f.style.width = '0%';
+    void f.offsetWidth;
+    f.style.transition = 'width ' + (MSG_INTERVAL_MS / 1000) + 's linear';
+    f.style.width = '100%';
+  }
+  function showMessage(idx) {
+    var wrap = document.getElementById('marqueeWrap');
+    if (!wrap) return;
+    wrap.textContent = '';
+    var msg = messages[idx];
+    if (!msg) return;
+    var line = document.createElement('div');
+    line.className = 'marquee-line';
+    line.style.color = msg.color || '#ffffff';
+    var text = String(msg.text || '');
+    Array.from(text).forEach(function(c, i) {
+      var charSpan = document.createElement('span');
+      charSpan.className = 'marquee-char';
+      charSpan.textContent = (c === ' ') ? ' ' : c;
+      charSpan.style.animationDelay = (60 + i * 55) + 'ms';
+      line.appendChild(charSpan);
+    });
+    wrap.appendChild(line);
+    resetSwitchBar();
+  }
+  function nextMessage() {
+    if (messages.length === 0) return;
+    currentMsgIdx = (currentMsgIdx + 1) % messages.length;
+    showMessage(currentMsgIdx);
+  }
+  function startMessageLoop() {
+    if (msgTimer) { clearInterval(msgTimer); msgTimer = null; }
+    if (messages.length === 0) return;
+    if (currentMsgIdx >= messages.length) currentMsgIdx = 0;
+    showMessage(currentMsgIdx);
+    if (messages.length > 1) {
+      msgTimer = setInterval(nextMessage, MSG_INTERVAL_MS);
+    }
+  }
+  function applyNewMessages(newList) {
+    if (!Array.isArray(newList)) return;
+    messages = newList.length > 0 ? newList : DEFAULT_MESSAGES.slice();
+    currentMsgIdx = 0;
+    persistMessages();
+    startMessageLoop();
+  }
+
+  /* ============================================================
+     ③ タイマー / ④ ゲームタイトル ロジック
+     ============================================================ */
   function save(){
     lsSet(LS.running, running ? '1' : '0');
     lsSet(LS.start,   String(startMs));
     lsSet(LS.paused,  String(pausedMs));
   }
-
   function two(n){ return (n < 10 ? '0' : '') + n; }
   function fmt(ms){
     if (!isFinite(ms) || ms < 0) ms = 0;
@@ -107,26 +244,24 @@
     var ss = s % 60;
     return two(h) + ':' + two(m) + ':' + two(ss);
   }
-
   function elapsed(){ return running ? (Date.now() - startMs) : pausedMs; }
 
   function render(){
     if (running) {
-      wrap.className = 'live';
+      panel.className = 'live';
       badgeText.textContent = 'LIVE';
       tEl.textContent = fmt(Date.now() - startMs);
     } else if (pausedMs > 0) {
-      wrap.className = 'idle';
+      panel.className = 'idle';
       badgeText.textContent = '一時停止';
       tEl.textContent = fmt(pausedMs);
     } else {
-      wrap.className = 'idle';
+      panel.className = 'idle';
       badgeText.textContent = '待機中';
       tEl.textContent = '00:00:00';
     }
   }
 
-  /* ===== ゲームタイトル（タイマーの稼働状態とは独立。既存仕様のまま） ===== */
   function applyGameTitle(title){
     gameTitle = (title == null ? '' : String(title)).trim();
     if (gameTitle) {
@@ -139,19 +274,15 @@
     lsSet(LS.game, gameTitle);
   }
 
-  /* ===== タイマー制御：localhost(コントロールパネル経由 ws://localhost:21214)から
-     受け取った状態だけで動作する。配信イベントによる自動スタート/自動停止/自動リセットは廃止。
-     メッセージ形式: { event:'timerControl', running:<bool>, elapsedMs:<int>, at:<epoch ms> }
-       running  … 計測中にするか
-       elapsedMs… 時刻 at の時点での経過ミリ秒
-       at       … その経過を測定したパネル側の絶対時刻(省略時は受信時刻)
-     パネルが「真の状態」を保持し、ここはそれを忠実に再現するだけ。 */
+  /* タイマー制御: コントロールパネル(ws://localhost:21214)からの状態だけで動作。
+     配信イベント(gift/like等)による自動スタート/停止/リセットは行わない。
+     メッセージ形式: { event:'timerControl', running:<bool>, elapsedMs:<int>, at:<epoch ms> } */
   function applyTimerControl(msg){
     var isRun = !!msg.running;
     var el = Number(msg.elapsedMs); if (!isFinite(el) || el < 0) el = 0;
     var at = Number(msg.at);        if (!isFinite(at) || at <= 0) at = Date.now();
     if (isRun) {
-      startMs = at - el;   // 絶対起点。メッセージ到達が多少遅れても経過は正しく進む
+      startMs = at - el;   // 絶対起点。受信が多少遅れても経過は正しく進む
       running = true;
     } else {
       pausedMs = el;
@@ -161,28 +292,22 @@
     render();
   }
 
+  /* ============================================================
+     統合 WebSocket 受信ハンドラ
+       timerControl  → タイマー制御
+       setGameTitle  → ゲームタイトル更新
+       updateMessages→ 切替テキスト更新
+       それ以外(gift/like/chat/connected/config/streamEnd 等)は無視。
+     ============================================================ */
   function handleMessage(msg){
     if (!msg || !msg.event) return;
     var ev = msg.event;
-    if (ev === 'timerControl') { applyTimerControl(msg); return; }
-    if (ev === 'setGameTitle')  { applyGameTitle(msg.title); return; }
-    /* それ以外(gift/like/chat/roomUser/connected/streamEnd/config 等)は
-       タイマーに一切影響させない＝視聴者アクションや配信検知で勝手にリセット/停止しない。 */
+    if (ev === 'timerControl')   { applyTimerControl(msg);      return; }
+    if (ev === 'setGameTitle')   { applyGameTitle(msg.title);   return; }
+    if (ev === 'updateMessages') { applyNewMessages(msg.messages); return; }
   }
 
-  function loadInit(){
-    applyGameTitle(lsGet(LS.game) || '');
-    /* ★再読込されても前回状態を復元して継続（手動リセットまで継続） */
-    running  = lsGet(LS.running) === '1';
-    startMs  = Number(lsGet(LS.start))  || 0;
-    pausedMs = Number(lsGet(LS.paused)) || 0;
-    if (running && (!startMs || startMs > Date.now() + 2000)) startMs = Date.now(); // 異常値ガード
-    render();
-  }
-
-  /* ===== WS接続 =====
-     21214 = コントロールパネル中継(ここからtimerControl/setGameTitleを受信＝主役)。
-     21213 = 本番TikFinity(接続は維持するがタイマーには使わない)。 */
+  /* ===== WS接続(本番=21213 TikFinity / 操作パネル=21214 中継) ===== */
   function connect(url){
     var ws;
     try { ws = new WebSocket(url); }
@@ -192,17 +317,55 @@
     ws.onerror   = function(){ try { ws.close(); } catch(e){} };
   }
 
-  /* ===== テスト/iframe 用に公開 ===== */
-  window.handleMessage = handleMessage;
-  window.timerLoadInit = loadInit;
-  window.setGameTitle  = applyGameTitle;
-  window.timerState    = function(){ return { running: running, startMs: startMs, pausedMs: pausedMs, elapsedMs: elapsed(), gameTitle: gameTitle }; };
-
   /* ===== 初期化 ===== */
-  loadInit();
-  setInterval(render, 250);
-  connect("ws://localhost:21214/");
+  function init(){
+    // テキスト
+    loadMessages();
+    startMessageLoop();
+    // タイマー / ゲームタイトル(再読込されても前回状態を復元して継続)
+    applyGameTitle(lsGet(LS.game) || '');
+    running  = lsGet(LS.running) === '1';
+    startMs  = Number(lsGet(LS.start))  || 0;
+    pausedMs = Number(lsGet(LS.paused)) || 0;
+    if (running && (!startMs || startMs > Date.now() + 2000)) startMs = Date.now(); // 異常値ガード
+    render();
+    setInterval(render, 250);
+  }
+
+  /* ===== テスト/外部公開フック ===== */
+  window.handleMessage    = handleMessage;
+  window.applyNewMessages = applyNewMessages;
+  window.setGameTitle     = applyGameTitle;
+  window.timerState       = function(){ return { running: running, startMs: startMs, pausedMs: pausedMs, elapsedMs: elapsed(), gameTitle: gameTitle }; };
+  window.overlayMessages  = function(){ return messages.slice(); };
+
+  init();
+
+  /* ============================================================
+     プレビュー/デモ表示  ?demo=1  または  ?demo=ゲーム名
+       WS・コントロールパネル無しでも「テキスト＋稼働タイマー＋ゲームタイトル」
+       の見え方を確認するためのサンプル表示。localStorageには一切保存しない
+       (本番状態を汚さない)。本番ソースURLには付けないこと。確認後は ?demo を外す。
+     ============================================================ */
+  (function(){
+    var demo = getQuery('demo');
+    if (demo === null) return;
+    if (!lsGet(STORAGE_MESSAGES)) {
+      messages = [
+        { text: "プレビュー表示中", color: "#baff29" },
+        { text: "コメント大歓迎♪", color: "#ff007f" }
+      ];
+      currentMsgIdx = 0;
+      startMessageLoop();
+    }
+    running = true; pausedMs = 0; startMs = Date.now() - ((1 * 3600 + 23 * 60 + 45) * 1000);
+    var dt = (demo && demo !== '1' && demo.toLowerCase() !== 'true') ? demo : 'War Thunder';
+    gameTitle = dt; gameTitleEl.textContent = dt; titleBox.style.display = '';
+    render();
+  })();
+
   connect("ws://localhost:21213/");
+  connect("ws://localhost:21214/");
 })();
 </script>
 </body>
