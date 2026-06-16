@@ -35,36 +35,38 @@
 
   /* タイトル行（合計コインは出さない） */
   .titlebar{display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-left:2px;}
-  #title{font-weight:900; font-size:23px; letter-spacing:.5px; color:var(--ink);
+  #title{font-weight:900; font-size:23px; letter-spacing:.5px;
     background:linear-gradient(180deg,var(--pink2),var(--purple)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
   .titlebar .spark{font-size:18px; animation:twinkle 2.6s ease-in-out infinite;}
   @keyframes twinkle{0%,100%{opacity:.5; transform:scale(.9)}50%{opacity:1; transform:scale(1.15)}}
   #langTag{margin-left:auto; font-size:11px; font-weight:900; color:#fff; background:linear-gradient(135deg,var(--purple),var(--pink2)); padding:2px 9px; border-radius:999px; letter-spacing:1px; box-shadow:0 2px 0 rgba(120,80,160,.3);}
 
-  /* ===== 5セル等分ゲージ（重ならない） ===== */
-  #cells{display:flex; gap:5px; align-items:stretch;}
-  .cell{
-    flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px;
-    background:rgba(120,80,160,.10); border:2px solid rgba(255,255,255,.7); border-radius:13px; padding:7px 5px 6px;
-    transition:.3s;
-  }
-  .cell .rw{
-    font-size:13px; font-weight:800; line-height:1.16; color:#7a5a9a; text-align:center;
-    min-height:31px; display:flex; align-items:center; justify-content:center;
-    overflow-wrap:anywhere; word-break:break-word; transition:opacity .25s;
-  }
-  .cell .bar{position:relative; width:100%; height:13px; border-radius:999px; background:rgba(120,80,160,.18); border:2px solid #fff; overflow:hidden;}
-  .cell .barfill{position:absolute; inset:0; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--pink),var(--pink2)); transition:width .8s cubic-bezier(.22,1,.36,1);}
-  .cell .barfill::after{content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 8px,transparent 8px 16px); animation:flow 1s linear infinite;}
-  @keyframes flow{to{background-position:24px 0}}
-  .cell .amt{font-size:13px; font-weight:900; color:#8a6fb0; white-space:nowrap;}
-  .cell .amt i{font-style:normal; font-size:10px; color:var(--gold2);}
+  /* ===== 連続ゲージ（1本でつながる・区切りは点線＋ドット） ===== */
+  #gauge{position:relative; background:rgba(120,80,160,.07); border:2px solid rgba(255,255,255,.6); border-radius:16px; padding:9px 12px 8px;}
+  #labels{display:flex;}
+  #labels .lc{flex:1 1 0; min-width:0; text-align:center; padding:1px 8px; font-size:13px; font-weight:800; line-height:1.16; color:#7a5a9a;
+    min-height:31px; display:flex; align-items:center; justify-content:center; overflow-wrap:anywhere; word-break:break-word; transition:opacity .25s, color .3s;}
+  #labels .lc + .lc{border-left:2px dashed rgba(169,140,255,.32);}
+  #labels .lc.done{color:var(--gold2);}
+  #labels .lc.next{color:var(--pink2);}
 
-  .cell.done{background:linear-gradient(135deg,rgba(255,211,77,.30),rgba(255,179,0,.22)); border-color:var(--gold2);}
-  .cell.done .rw{color:#7a4a00;} .cell.done .amt{color:var(--gold2);}
-  .cell.done .barfill{background:linear-gradient(90deg,var(--gold),var(--gold2));}
-  .cell.next{border-color:var(--pink2); box-shadow:0 0 0 2px rgba(255,95,168,.25); animation:nextPulse 1.4s ease-in-out infinite;}
-  @keyframes nextPulse{0%,100%{box-shadow:0 0 0 2px rgba(255,95,168,.18)}50%{box-shadow:0 0 0 4px rgba(255,95,168,.4)}}
+  /* 連続トラック＝全幅1本 */
+  #barwrap{position:relative; margin:7px 4px 8px;}
+  #track{position:relative; height:16px; border-radius:999px; background:rgba(120,80,160,.18); border:2px solid #fff; overflow:hidden; box-shadow:inset 0 2px 5px rgba(120,80,160,.22);}
+  #fill{position:absolute; inset:0; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--pink),var(--pink2)); box-shadow:0 0 14px rgba(255,95,168,.5); transition:width .85s cubic-bezier(.22,1,.36,1);}
+  #fill::after{content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 8px,transparent 8px 16px); animation:flow 1s linear infinite;}
+  @keyframes flow{to{background-position:24px 0}}
+  #card.alldone #fill{background:linear-gradient(90deg,var(--gold),var(--gold2)); box-shadow:0 0 16px rgba(255,179,0,.6);}
+  /* 区切りドット（達成で金色） */
+  #ticks{position:absolute; inset:0; pointer-events:none;}
+  .tick{position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:#fff; border:2.5px solid var(--grey); transform:translate(-50%,-50%); box-shadow:0 1px 3px rgba(0,0,0,.22); transition:.3s; z-index:2;}
+  .tick.done{background:linear-gradient(180deg,var(--gold),var(--gold2)); border-color:#fff; box-shadow:0 0 9px rgba(255,179,0,.85);}
+
+  #amounts{display:flex;}
+  #amounts .ac{flex:1 1 0; min-width:0; text-align:center; padding:1px 4px; font-size:13px; font-weight:900; color:#8a6fb0; white-space:nowrap; transition:color .3s;}
+  #amounts .ac + .ac{border-left:2px dashed rgba(169,140,255,.18);}
+  #amounts .ac i{font-style:normal; font-size:10px; color:var(--gold2);}
+  #amounts .ac.done{color:var(--gold2);}
 
   /* 達成バナー / 紙吹雪 */
   #flash{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:22px;
@@ -103,7 +105,14 @@
     <span id="title">ギフリア</span>
     <span id="langTag">JP</span>
   </div>
-  <div id="cells"></div>
+  <div id="gauge">
+    <div id="labels"></div>
+    <div id="barwrap">
+      <div id="track"><div id="fill"></div></div>
+      <div id="ticks"></div>
+    </div>
+    <div id="amounts"></div>
+  </div>
   <div id="flash"><div class="ft">達成🎉</div><div class="fr"></div></div>
 </div>
 
@@ -182,7 +191,6 @@
   function fmt(n){ return Math.round(n).toLocaleString('ja-JP'); }
   function labelOf(m){ return state.lang==='en' ? (m.en||m.ja||'') : (m.ja||m.en||''); }
 
-  // テキスト → [{v,ja,en}]（"v | ja | en" / "v:ja" 等を許容）
   function parseMs(text){
     var out=[];
     (text||'').split(/\n+/).forEach(function(line){
@@ -197,30 +205,29 @@
   }
   function msToText(ms){ return ms.map(function(m){ return m.v+' | '+(m.ja||'')+' | '+(m.en||''); }).join('\n'); }
 
-  // 等間隔: セル i は thr[i-1]→thr[i] を表す（prev=0始まり）
-  function cellFrac(cur, i){
-    var prev = i===0 ? 0 : state.ms[i-1].v;
-    var top = state.ms[i].v;
-    if(top<=prev) return cur>=top?1:0;
-    return Math.max(0, Math.min(1, (cur-prev)/(top-prev)));
+  // 連続フィル: 0→m0→m1…→m{n-1} を均等幅で 0〜100%
+  function fillPct(cur){
+    var ms=state.ms, n=ms.length; if(!n) return 0;
+    var thr=[0]; for(var i=0;i<n;i++) thr.push(ms[i].v);
+    if(cur<=0) return 0; if(cur>=thr[n]) return 100;
+    for(var j=0;j<n;j++){ if(cur<thr[j+1]){ var sp=thr[j+1]-thr[j]; var f= sp>0?(cur-thr[j])/sp:0; return (j+f)/n*100; } }
+    return 100;
   }
+  function tickPct(k){ return (k+1)/state.ms.length*100; }
   function nextIndex(cur){ for(var i=0;i<state.ms.length;i++){ if(cur<state.ms[i].v) return i; } return -1; }
 
-  function buildCells(){
-    var box=$('cells'); box.innerHTML='';
-    state.ms.forEach(function(m){
-      var cell=document.createElement('div'); cell.className='cell';
-      var rw=document.createElement('div'); rw.className='rw'; rw.textContent=labelOf(m);
-      var bar=document.createElement('div'); bar.className='bar';
-      var bf=document.createElement('div'); bf.className='barfill'; bar.appendChild(bf);
-      var amt=document.createElement('div'); amt.className='amt'; amt.innerHTML=fmt(m.v)+' <i>コイン</i>';
-      cell.appendChild(rw); cell.appendChild(bar); cell.appendChild(amt);
-      box.appendChild(cell);
+  function buildGauge(){
+    var L=$('labels'), T=$('ticks'), A=$('amounts');
+    L.innerHTML=''; T.innerHTML=''; A.innerHTML='';
+    state.ms.forEach(function(m,k){
+      var lc=document.createElement('div'); lc.className='lc'; lc.textContent=labelOf(m); L.appendChild(lc);
+      var tk=document.createElement('div'); tk.className='tick'; tk.style.left=tickPct(k)+'%'; T.appendChild(tk);
+      var ac=document.createElement('div'); ac.className='ac'; ac.innerHTML=fmt(m.v)+' <i>コイン</i>'; A.appendChild(ac);
     });
   }
   function renderLabels(){
-    var cells=$('cells').children;
-    for(var i=0;i<state.ms.length;i++){ if(cells[i]) cells[i].querySelector('.rw').textContent=labelOf(state.ms[i]); }
+    var L=$('labels').children;
+    for(var i=0;i<state.ms.length;i++){ if(L[i]) L[i].textContent=labelOf(state.ms[i]); }
     $('langTag').textContent = state.lang==='en' ? 'EN' : 'JP';
   }
 
@@ -228,18 +235,17 @@
   function render(){
     $('title').textContent=state.title;
     var c=current(), ni=nextIndex(c), doneN=0;
-    var cells=$('cells').children;
+    $('fill').style.width=fillPct(c).toFixed(2)+'%';
+    var L=$('labels').children, A=$('amounts').children, T=$('ticks').children;
     for(var i=0;i<state.ms.length;i++){
       var done=(c>=state.ms[i].v); if(done) doneN++;
-      var cell=cells[i]; if(!cell) continue;
-      cell.classList.toggle('done', done);
-      cell.classList.toggle('next', i===ni);
-      cell.querySelector('.barfill').style.width=(cellFrac(c,i)*100).toFixed(1)+'%';
-      cell.querySelector('.rw').textContent=labelOf(state.ms[i]);
+      if(L[i]){ L[i].classList.toggle('done',done); L[i].classList.toggle('next',i===ni); L[i].textContent=labelOf(state.ms[i]); }
+      if(A[i]) A[i].classList.toggle('done',done);
+      if(T[i]) T[i].classList.toggle('done',done);
     }
     card.classList.toggle('alldone', ni<0);
     $('langTag').textContent = state.lang==='en' ? 'EN' : 'JP';
-    if(doneN>prevDone){ var m=state.ms[doneN-1]; celebrate(m?labelOf(m):''); }
+    if(doneN>prevDone){ var mm=state.ms[doneN-1]; celebrate(mm?labelOf(mm):''); }
     prevDone=doneN;
   }
 
@@ -270,7 +276,7 @@
     clearInterval(langTimer);
     if(!state.langSwitch) return;
     langTimer=setInterval(function(){
-      var rws=$('cells').querySelectorAll('.rw');
+      var rws=$('labels').querySelectorAll('.lc');
       rws.forEach(function(r){ r.style.opacity=0; });
       setTimeout(function(){
         state.lang = state.lang==='ja' ? 'en' : 'ja';
@@ -330,7 +336,7 @@
         var arr=null;
         if(m.items&&m.items.length) arr=m.items.map(function(x){ return {v:Number(x.v)||0, ja:String(x.ja||''), en:String(x.en||'')}; });
         else if(m.text) arr=parseMs(m.text);
-        if(arr&&arr.length){ arr.sort(function(a,b){return a.v-b.v;}); state.ms=arr; buildCells(); recomputePrevDone(); render(); }
+        if(arr&&arr.length){ arr.sort(function(a,b){return a.v-b.v;}); state.ms=arr; buildGauge(); recomputePrevDone(); render(); }
       }
     };
     pws.onclose=function(){ clearTimeout(pretry); pretry=setTimeout(connectPanel,4000); };
@@ -341,7 +347,7 @@
     setCurrent:function(n){ state.auto=false; state.manualCurrent=Number(n)||0; recomputePrevDone(); render(); },
     addCoins:function(n){ if(state.auto) state.session+=Number(n)||0; else state.manualCurrent+=Number(n)||0; render(); },
     reset:function(){ state.session=0; state.manualCurrent=0; prevDone=0; render(); },
-    setMilestones:function(arr){ if(arr&&arr.length){ state.ms=arr.slice().sort(function(a,b){return a.v-b.v;}); buildCells(); recomputePrevDone(); render(); } }
+    setMilestones:function(arr){ if(arr&&arr.length){ state.ms=arr.slice().sort(function(a,b){return a.v-b.v;}); buildGauge(); recomputePrevDone(); render(); } }
   };
   window.addEventListener('message',function(e){ var d=e.data||{};
     if(d.type==='gg:current') window.GG.setCurrent(d.value);
@@ -391,7 +397,7 @@
     var wasAuto=state.auto, oldUrl=state.wsUrl;
     state.auto=$('i_auto').checked; state.wsUrl=$('i_wsurl').value||'ws://localhost:21213/';
     state.mult=+$('i_mult').value||1; state.base=+$('i_base').value; state.debug=$('i_debug').checked; state.sound=$('i_sound').checked;
-    buildCells(); recomputePrevDone(); syncPanel(); render(); startLangTimer();
+    buildGauge(); recomputePrevDone(); syncPanel(); render(); startLangTimer();
     if(state.auto && (!wasAuto || oldUrl!==state.wsUrl)) connect();
     if(!state.auto){ try{ ws&&ws.close(); }catch(e){} setStatus('off','手動'); }
   };
@@ -412,7 +418,7 @@
       render(); },850); };
 
   // 初期化
-  fromURL(); buildCells(); syncPanel(); recomputePrevDone(); render(); startLangTimer(); connect(); connectPanel();
+  fromURL(); buildGauge(); syncPanel(); recomputePrevDone(); render(); startLangTimer(); connect(); connectPanel();
 })();
 </script>
 </body>
