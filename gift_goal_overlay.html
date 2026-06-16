@@ -16,13 +16,13 @@
   html,body{background:transparent; overflow:hidden;}
   body{
     font-family:'M PLUS Rounded 1c',sans-serif; -webkit-font-smoothing:antialiased;
-    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:10px; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:5px 10px; color:var(--ink);
   }
 
   /* ===== カード（横長・低め） ===== */
   #card{
     position:relative; width:100%; max-width:1000px;
-    border-radius:22px; padding:10px 18px 12px;
+    border-radius:20px; padding:5px 18px 11px;
     background:
       linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.88)),
       linear-gradient(135deg, var(--pink), var(--purple) 55%, var(--mint));
@@ -34,21 +34,21 @@
   #status.wait{background:#ffc24d;} #status.err{background:#ff5b6e;}
 
   /* タイトル行（合計コインは出さない） */
-  .titlebar{display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-left:2px;}
-  #title{font-weight:900; font-size:23px; letter-spacing:.5px;
+  .titlebar{display:flex; align-items:center; gap:8px; margin-bottom:3px; padding-left:2px;}
+  #title{font-weight:900; font-size:19px; letter-spacing:.5px;
     background:linear-gradient(180deg,var(--pink2),var(--purple)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
   .titlebar .spark{font-size:18px; animation:twinkle 2.6s ease-in-out infinite;}
   @keyframes twinkle{0%,100%{opacity:.5; transform:scale(.9)}50%{opacity:1; transform:scale(1.15)}}
   #langTag{margin-left:auto; font-size:11px; font-weight:900; color:#fff; background:linear-gradient(135deg,var(--purple),var(--pink2)); padding:2px 9px; border-radius:999px; letter-spacing:1px; box-shadow:0 2px 0 rgba(120,80,160,.3);}
 
   /* ===== 連続ゲージ（1本でつながる・区切りは点線＋ドット） ===== */
-  #gauge{position:relative; background:rgba(120,80,160,.07); border:2px solid rgba(255,255,255,.6); border-radius:16px; padding:9px 12px 8px;}
+  #gauge{position:relative; background:rgba(255,255,255,.55); border:2px solid rgba(255,255,255,.9); border-radius:16px; padding:8px 12px 8px;}
   #labels{display:flex;}
-  #labels .lc{flex:1 1 0; min-width:0; text-align:center; padding:1px 8px; font-size:13px; font-weight:800; line-height:1.16; color:#7a5a9a;
-    min-height:31px; display:flex; align-items:center; justify-content:center; overflow-wrap:anywhere; word-break:break-word; transition:opacity .25s, color .3s;}
-  #labels .lc + .lc{border-left:2px dashed rgba(169,140,255,.32);}
-  #labels .lc.done{color:var(--gold2);}
-  #labels .lc.next{color:var(--pink2);}
+  #labels .lc{flex:1 1 0; min-width:0; text-align:center; padding:2px 7px; font-size:18px; font-weight:900; line-height:1.12; color:#311a57;
+    min-height:40px; display:flex; align-items:center; justify-content:center; overflow-wrap:anywhere; word-break:break-word; transition:opacity .25s, color .3s;}
+  #labels .lc + .lc{border-left:2px dashed rgba(120,80,160,.32);}
+  #labels .lc.done{color:#6a3a00;}
+  #labels .lc.next{color:#b51f5c;}
 
   /* 連続トラック＝全幅1本 */
   #barwrap{position:relative; margin:7px 4px 8px;}
@@ -63,10 +63,10 @@
   .tick.done{background:linear-gradient(180deg,var(--gold),var(--gold2)); border-color:#fff; box-shadow:0 0 9px rgba(255,179,0,.85);}
 
   #amounts{display:flex;}
-  #amounts .ac{flex:1 1 0; min-width:0; text-align:center; padding:1px 4px; font-size:13px; font-weight:900; color:#8a6fb0; white-space:nowrap; transition:color .3s;}
-  #amounts .ac + .ac{border-left:2px dashed rgba(169,140,255,.18);}
-  #amounts .ac i{font-style:normal; font-size:10px; color:var(--gold2);}
-  #amounts .ac.done{color:var(--gold2);}
+  #amounts .ac{flex:1 1 0; min-width:0; text-align:center; padding:2px 4px; font-size:18px; font-weight:900; color:#311a57; white-space:nowrap; transition:color .3s;}
+  #amounts .ac + .ac{border-left:2px dashed rgba(120,80,160,.24);}
+  #amounts .ac i{font-style:normal; font-size:12px; color:#9a6200;}
+  #amounts .ac.done{color:#6a3a00;}
 
   /* 達成バナー / 紙吹雪 */
   #flash{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:22px;
