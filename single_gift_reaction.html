@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>単発ギフト リアクション オーバーレイ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink:#ff8fc7; --pink2:#ff5fa8; --purple:#a98cff; --mint:#7ef0d0;
+    --gold:#ffd34d; --gold2:#ffb300; --ink:#3a2b45;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:transparent; overflow:hidden;}
+  body{
+    font-family:'M PLUS Rounded 1c',sans-serif; -webkit-font-smoothing:antialiased;
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:10px; color:var(--ink);
+  }
+
+  #card{
+    position:relative; width:100%; max-width:960px;
+    border-radius:22px; padding:10px 18px 12px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.88)),
+      linear-gradient(135deg, var(--pink), var(--purple) 55%, var(--mint));
+    background-clip:padding-box; border:4px solid #fff;
+    box-shadow:0 8px 0 rgba(169,140,255,.28), 0 14px 32px rgba(120,80,160,.34), inset 0 0 0 3px rgba(255,143,199,.4);
+  }
+  #status{position:absolute; top:10px; right:12px; width:12px; height:12px; border-radius:50%; background:#cbc4d2; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:.3s; z-index:3;}
+  #status.on{background:#27d080; box-shadow:0 0 8px rgba(39,208,128,.85);}
+  #status.wait{background:#ffc24d;} #status.err{background:#ff5b6e;}
+
+  .titlebar{display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-left:2px;}
+  #title{font-weight:900; font-size:22px; letter-spacing:.5px;
+    background:linear-gradient(180deg,var(--pink2),var(--purple)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; transition:opacity .25s;}
+  .titlebar .spark{font-size:18px; animation:twinkle 2.6s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.5; transform:scale(.9)}50%{opacity:1; transform:scale(1.15)}}
+  #langTag{margin-left:auto; font-size:11px; font-weight:900; color:#fff; background:linear-gradient(135deg,var(--purple),var(--pink2)); padding:2px 9px; border-radius:999px; letter-spacing:1px; box-shadow:0 2px 0 rgba(120,80,160,.3);}
+
+  /* ===== 3段リアクション一覧（横並びカード） ===== */
+  #tiers{display:flex; gap:8px; align-items:stretch;}
+  .tier{
+    flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px;
+    background:rgba(120,80,160,.10); border:2px solid rgba(255,255,255,.75); border-radius:15px; padding:9px 6px 8px;
+  }
+  .tier .ic{font-size:30px; line-height:1;}
+  .tier .th{font-size:14px; font-weight:900; color:#fff; background:linear-gradient(135deg,var(--gold),var(--gold2));
+    padding:2px 12px; border-radius:999px; box-shadow:0 2px 0 rgba(217,152,0,.45); white-space:nowrap;}
+  .tier .rw{font-size:15px; font-weight:800; color:#7a4a9a; text-align:center; line-height:1.18;
+    overflow-wrap:anywhere; word-break:break-word; transition:opacity .25s; min-height:20px;}
+
+  /* ===== 設定パネル ===== */
+  #gear{position:fixed; top:8px; right:10px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.85); border:none; cursor:pointer; font-size:18px; opacity:.25; transition:.2s; z-index:60;}
+  #gear:hover{opacity:1; transform:rotate(40deg)}
+  #panel{position:fixed; top:0; right:0; height:100vh; width:330px; background:#fff; color:#333; box-shadow:-8px 0 30px rgba(0,0,0,.25); transform:translateX(105%); transition:.3s; z-index:61; padding:16px; overflow:auto; font-size:14px;}
+  #panel.open{transform:translateX(0)}
+  #panel h3{font-size:15px; margin:14px 0 4px; color:#a14a86; border-top:1px dashed #eadcf5; padding-top:12px} #panel h3:first-child{border:0;padding-top:0;margin-top:0}
+  #panel p.note{font-size:11.5px; color:#888; margin-bottom:8px; line-height:1.5}
+  #panel label{display:block; font-weight:800; margin:8px 0 3px; color:#6a4a8a}
+  #panel input[type=text],#panel textarea{width:100%; padding:8px 10px; border:2px solid #e3d7f5; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:#333;}
+  #panel textarea{height:120px; resize:vertical; line-height:1.5; font-size:12.5px;}
+  #panel .sw{display:flex; align-items:center; gap:8px; margin:6px 0; font-weight:800; color:#6a4a8a}
+  #panel button.apply{width:100%; margin-top:12px; padding:11px; border:none; border-radius:12px; background:linear-gradient(135deg,#a98cff,#ff5fa8); color:#fff; font-weight:900; font-size:15px; cursor:pointer; font-family:inherit;}
+  #panel .mini{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap}
+  #panel .mini button{flex:1; min-width:62px; padding:8px 4px; border:2px solid #e3d7f5; background:#faf7ff; border-radius:9px; cursor:pointer; font-weight:800; font-size:12px; font-family:inherit; color:#6a4a8a}
+  #urlOut{margin-top:10px; font-size:10.5px; word-break:break-all; background:#f6f2fb; padding:8px; border-radius:8px; color:#777}
+  #wsState{font-size:12px; font-weight:800; margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="card">
+  <span id="status"></span>
+  <div class="titlebar">
+    <span class="spark">✨</span>
+    <span id="title">単発ギフト リアクション</span>
+    <span id="langTag">JP</span>
+  </div>
+  <div id="tiers"></div>
+</div>
+
+<button id="gear" title="設定">⚙️</button>
+<div id="panel">
+  <h3>① タイトル（日英）</h3>
+  <label>日本語タイトル</label><input type="text" id="i_title_ja" value="単発ギフト リアクション">
+  <label>English title</label><input type="text" id="i_title_en" value="Single-Gift Reactions">
+
+  <h3>② リアクション項目</h3>
+  <p class="note">1行＝「コイン | 絵文字 | 日本語 | English」（| 区切り）。コイン数は「◯◯以上」の判定。小さい順に並びます。10秒ごとに日英が切り替わります。</p>
+  <label>項目（コイン | 絵文字 | 日本語 | English）</label>
+  <textarea id="i_items">100 | 🫰 | 指ハート | Finger heart
+500 | 🫶 | ハンドハートポーズ | Hand heart pose
+1000 | 😘 | 投げキッス | Blow a kiss</textarea>
+  <div class="sw"><input type="checkbox" id="i_langswitch" checked> 10秒ごとに日英を切り替える</div>
+
+  <button class="apply" id="applyBtn">反映する</button>
+  <div class="mini">
+    <button id="langBtn">🌐 日英切替</button>
+    <button id="copyBtn">🔗 URLコピー</button>
+  </div>
+  <div id="wsState">接続: ―</div>
+  <div id="urlOut"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  var DEFAULT_TITLE = {ja:'単発ギフト リアクション', en:'Single-Gift Reactions'};
+  var DEFAULT_ITEMS = [
+    {v:100,  icon:'🫰', ja:'指ハート',          en:'Finger heart'},
+    {v:500,  icon:'🫶', ja:'ハンドハートポーズ', en:'Hand heart pose'},
+    {v:1000, icon:'😘', ja:'投げキッス',         en:'Blow a kiss'}
+  ];
+
+  var state = {
+    title: {ja:DEFAULT_TITLE.ja, en:DEFAULT_TITLE.en},
+    items: DEFAULT_ITEMS.map(function(m){ return {v:m.v,icon:m.icon,ja:m.ja,en:m.en}; }),
+    lang:'ja', langSwitch:true
+  };
+  function fmt(n){ return Math.round(n).toLocaleString('ja-JP'); }
+  function reactOf(m){ return state.lang==='en' ? (m.en||m.ja||'') : (m.ja||m.en||''); }
+  function threshOf(v){ return state.lang==='en' ? (fmt(v)+'+') : (fmt(v)+'以上'); }
+  function titleOf(){ return state.lang==='en' ? (state.title.en||state.title.ja||'') : (state.title.ja||state.title.en||''); }
+
+  // "コイン | 絵文字 | 日本語 | English"
+  function parseItems(text){
+    var out=[];
+    (text||'').split(/\n+/).forEach(function(line){
+      line=line.trim(); if(!line) return;
+      var p = line.split('|');
+      var v=parseInt((p[0]||'').replace(/[^0-9]/g,''),10);
+      if(!(v>0)) return;
+      out.push({v:v, icon:(p[1]||'').trim(), ja:(p[2]||'').trim(), en:(p[3]||'').trim()});
+    });
+    out.sort(function(a,b){return a.v-b.v;});
+    return out;
+  }
+  function itemsToText(items){ return items.map(function(m){ return m.v+' | '+(m.icon||'')+' | '+(m.ja||'')+' | '+(m.en||''); }).join('\n'); }
+
+  function buildTiers(){
+    var box=$('tiers'); box.innerHTML='';
+    state.items.forEach(function(m){
+      var t=document.createElement('div'); t.className='tier';
+      var ic=document.createElement('div'); ic.className='ic'; ic.textContent=m.icon||'🎁';
+      var th=document.createElement('div'); th.className='th'; th.textContent=threshOf(m.v);
+      var rw=document.createElement('div'); rw.className='rw'; rw.textContent=reactOf(m);
+      t.appendChild(ic); t.appendChild(th); t.appendChild(rw);
+      box.appendChild(t);
+    });
+  }
+  function renderLabels(){
+    $('title').textContent=titleOf();
+    var ch=$('tiers').children;
+    for(var i=0;i<state.items.length;i++){ if(ch[i]){ ch[i].querySelector('.th').textContent=threshOf(state.items[i].v); ch[i].querySelector('.rw').textContent=reactOf(state.items[i]); } }
+    $('langTag').textContent = state.lang==='en' ? 'EN' : 'JP';
+  }
+
+  // 言語切替（10秒・フェード）
+  var langTimer=null;
+  function startLangTimer(){
+    clearInterval(langTimer);
+    if(!state.langSwitch) return;
+    langTimer=setInterval(function(){
+      var els=[$('title')].concat([].slice.call($('tiers').querySelectorAll('.rw')));
+      els.forEach(function(r){ r.style.opacity=0; });
+      setTimeout(function(){
+        state.lang = state.lang==='ja' ? 'en' : 'ja';
+        renderLabels();
+        els.forEach(function(r){ r.style.opacity=1; });
+      },250);
+    },10000);
+  }
+
+  /* 操作パネル中継(ws_server.py:21214) */
+  var pws=null, pretry=null;
+  function setWs(t){ $('wsState').textContent='接続: '+t; var s=$('status'); s.className = t==='OK'?'on':'err'; }
+  function connectPanel(){
+    try{ if(pws){ pws.onclose=null; pws.close(); } }catch(e){}
+    try{ pws=new WebSocket('ws://localhost:21214/'); }catch(e){ setWs('×'); return; }
+    pws.onopen=function(){ setWs('OK'); };
+    pws.onmessage=function(ev){
+      var m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+      var nm=((m.event||'')+'').toLowerCase();
+      if(nm==='reacttitle'){ if(m.ja!=null) state.title.ja=String(m.ja); if(m.en!=null) state.title.en=String(m.en); renderLabels(); syncPanel(); }
+      else if(nm==='reactlist'){
+        var arr=null;
+        if(m.items&&m.items.length) arr=m.items.map(function(x){ return {v:Number(x.v)||0, icon:String(x.icon||''), ja:String(x.ja||''), en:String(x.en||'')}; });
+        else if(m.text) arr=parseItems(m.text);
+        if(arr&&arr.length){ arr.sort(function(a,b){return a.v-b.v;}); state.items=arr; buildTiers(); renderLabels(); syncPanel(); }
+      }
+    };
+    pws.onclose=function(){ setWs('切断'); clearTimeout(pretry); pretry=setTimeout(connectPanel,4000); };
+    pws.onerror=function(){ try{ pws.close(); }catch(e){} };
+  }
+
+  window.SGR={
+    setItems:function(arr){ if(arr&&arr.length){ state.items=arr.slice().sort(function(a,b){return a.v-b.v;}); buildTiers(); renderLabels(); } },
+    setTitle:function(ja,en){ if(ja!=null) state.title.ja=ja; if(en!=null) state.title.en=en; renderLabels(); }
+  };
+
+  /* URL / パネル */
+  function fromURL(){
+    var p=new URLSearchParams(location.search);
+    if(p.has('title')){ try{ var t=JSON.parse(decodeURIComponent(p.get('title'))); if(t&&(t.ja||t.en)) state.title=t; }catch(e){} }
+    if(p.has('items')){ try{ var a=JSON.parse(decodeURIComponent(p.get('items'))); if(a.length) state.items=a; }catch(e){} }
+    if(p.has('langsw')) state.langSwitch=p.get('langsw')!=='0';
+    if(p.has('lang')) state.lang=p.get('lang')==='en'?'en':'ja';
+  }
+  function toURL(){
+    var p=new URLSearchParams();
+    p.set('title',encodeURIComponent(JSON.stringify(state.title)));
+    p.set('items',encodeURIComponent(JSON.stringify(state.items)));
+    p.set('langsw',state.langSwitch?1:0);
+    return location.origin+location.pathname+'?'+p.toString();
+  }
+  function syncPanel(){
+    $('i_title_ja').value=state.title.ja; $('i_title_en').value=state.title.en;
+    $('i_items').value=itemsToText(state.items);
+    $('i_langswitch').checked=state.langSwitch;
+    $('urlOut').textContent=toURL();
+  }
+
+  $('gear').onclick=function(){ $('panel').classList.toggle('open'); };
+  $('applyBtn').onclick=function(){
+    state.title.ja=$('i_title_ja').value||DEFAULT_TITLE.ja;
+    state.title.en=$('i_title_en').value||DEFAULT_TITLE.en;
+    var ni=parseItems($('i_items').value); if(ni.length) state.items=ni;
+    state.langSwitch=$('i_langswitch').checked;
+    buildTiers(); renderLabels(); syncPanel(); startLangTimer();
+  };
+  $('langBtn').onclick=function(){ state.lang = state.lang==='ja'?'en':'ja'; renderLabels(); };
+  $('copyBtn').onclick=function(){ if(navigator.clipboard) navigator.clipboard.writeText(toURL()); $('copyBtn').textContent='✓ コピー済'; setTimeout(function(){ $('copyBtn').textContent='🔗 URLコピー'; },1500); };
+
+  // 初期化
+  fromURL(); buildTiers(); renderLabels(); syncPanel(); startLangTimer(); connectPanel();
+})();
+</script>
+</body>
+</html>
