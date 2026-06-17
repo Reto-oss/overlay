@@ -72,15 +72,20 @@
 
   /* ===== ⑤⑥ ギフト行(累計ギフリア + 単発フリップ) ===== */
   .gift-row { display: flex; flex-direction: row; align-items: stretch; border-top: 1px solid rgba(255,0,127,0.35); }
-  .cume-sec { flex: 1 1 0; min-width: 0; padding: 11px 20px 12px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-  .single-sec { flex: 0 0 auto; width: 300px; max-width: 40%; border-left: 2px solid rgba(255,0,127,0.32); padding: 8px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; overflow: hidden; }
+  .single-sec { flex: 0 0 auto; width: 280px; max-width: 38%; border-left: 2px solid rgba(255,0,127,0.32); padding: 8px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; overflow: hidden; }
 
-  .cume-top { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
-  .cume-label { font-size: 19px; font-weight: 900; letter-spacing: 2px; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.6); white-space: nowrap; flex: 0 0 auto; }
-  .cume-next { font-size: 23px; font-weight: 800; color: #fff; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity .25s; }
-  .cume-next .rw { color: #baff29; text-shadow: 0 0 8px rgba(186,255,41,0.7); }
-  .cume-next b { color: #baff29; font-size: 27px; }
-  .cume-next .ato { color: #ff007f; font-size: 17px; }
+  .cume-full { flex: 1 1 0; min-width: 0; padding: 7px 20px 9px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+  .cume-cap { text-align: center; }
+  .cume-label { font-size: 16px; font-weight: 900; letter-spacing: 2px; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.6); }
+  .cume-labels, .cume-amounts { display: flex; }
+  .cume-labels { transition: opacity .25s; }
+  .cume-labels .lc { flex: 1 1 0; min-width: 0; text-align: center; padding: 1px 6px; font-size: 16px; font-weight: 900; line-height: 1.12; color: #baff29; text-shadow: 0 0 7px rgba(186,255,41,0.6); min-height: 34px; display: flex; align-items: center; justify-content: center; overflow-wrap: anywhere; word-break: break-word; transition: color .3s; }
+  .cume-labels .lc + .lc { border-left: 1px dashed rgba(255,0,127,0.4); }
+  .cume-labels .lc.done { color: #ffffff; text-shadow: 0 0 9px rgba(186,255,41,0.9); }
+  .cume-amounts .ac { flex: 1 1 0; min-width: 0; text-align: center; padding: 1px 4px; font-size: 15px; font-weight: 900; color: #ff007f; text-shadow: 0 0 6px rgba(255,0,127,0.5); white-space: nowrap; transition: color .3s; }
+  .cume-amounts .ac + .ac { border-left: 1px dashed rgba(255,0,127,0.22); }
+  .cume-amounts .ac i { font-style: normal; font-size: 11px; color: #ff007f; }
+  .cume-amounts .ac.done { color: #baff29; }
   .cume-barwrap { position: relative; height: 16px; }
   .cume-track { position: absolute; inset: 0; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,0,127,0.45); overflow: hidden; }
   .cume-fill { position: absolute; inset: 0; width: 0%; background: linear-gradient(90deg, #ff007f, #baff29); box-shadow: 0 0 8px rgba(186,255,41,0.5); transition: width .85s cubic-bezier(.22,1,.36,1); }
@@ -109,7 +114,7 @@
     </div>
     <!-- ② 切替バー -->
     <div class="switch-bar"><div class="switch-bar-fill" id="switchBarFill"></div></div>
-    <!-- ③④ タイマー + ゲームタイトル -->
+    <!-- ③④⑥ タイマー + ゲームタイトル + 単発ギフリア(タイトルの右) -->
     <div class="body-row">
       <div class="timer-sec">
         <div class="badge"><span class="dot"></span><span id="badgeText">待機中</span></div>
@@ -120,24 +125,23 @@
         <div class="title-cap">🎮 タイトル</div>
         <div class="title-name" id="gameTitle"></div>
       </div>
-    </div>
-    <!-- ⑤⑥ ギフト行 -->
-    <div class="gift-row">
-      <div class="cume-sec">
-        <div class="cume-top">
-          <span class="cume-label" id="cumeLabel">ギフリア</span>
-          <span class="cume-next" id="cumeNext"></span>
-        </div>
-        <div class="cume-barwrap">
-          <div class="cume-track"><div class="cume-fill" id="cumeFill"></div></div>
-          <div class="cume-ticks" id="cumeTicks"></div>
-        </div>
-      </div>
       <div class="single-sec">
         <div class="single-label" id="singleLabel">1ギフトで</div>
         <div class="single-flip" id="singleFlip">
           <span class="sf-th" id="sfTh">100</span><span class="sf-suf" id="sfSuf">以上</span><span class="sf-arrow">▶</span><span class="sf-rw" id="sfRw">指ハート</span>
         </div>
+      </div>
+    </div>
+    <!-- ⑤ 累計ギフリア(3,000〜50,000すべて表示) -->
+    <div class="gift-row">
+      <div class="cume-full">
+        <div class="cume-cap"><span class="cume-label" id="cumeLabel">💎 ギフリア</span></div>
+        <div class="cume-labels" id="cumeLabels"></div>
+        <div class="cume-barwrap">
+          <div class="cume-track"><div class="cume-fill" id="cumeFill"></div></div>
+          <div class="cume-ticks" id="cumeTicks"></div>
+        </div>
+        <div class="cume-amounts" id="cumeAmounts"></div>
       </div>
     </div>
   </div>
@@ -290,22 +294,26 @@
     return 100;
   }
   function ggNext(cur){ for (var i=0;i<gg.ms.length;i++){ if (cur<gg.ms[i].v) return i; } return -1; }
-  function ggBuildTicks(){
-    var box = document.getElementById('cumeTicks'); if (!box) return;
-    box.innerHTML = ''; var n = gg.ms.length;
-    gg.ms.forEach(function(m,k){ var t=document.createElement('div'); t.className='cume-tick'; t.style.left=((k+1)/n*100)+'%'; box.appendChild(t); });
+  function ggBuild(){
+    var L=document.getElementById('cumeLabels'), T=document.getElementById('cumeTicks'), A=document.getElementById('cumeAmounts');
+    if (!L||!T||!A) return;
+    L.innerHTML=''; T.innerHTML=''; A.innerHTML=''; var n=gg.ms.length;
+    gg.ms.forEach(function(m,k){
+      var lc=document.createElement('div'); lc.className='lc'; lc.textContent=ggLabel(m); L.appendChild(lc);
+      var tk=document.createElement('div'); tk.className='cume-tick'; tk.style.left=((k+1)/n*100)+'%'; T.appendChild(tk);
+      var ac=document.createElement('div'); ac.className='ac'; ac.innerHTML=fmtN(m.v)+' <i>コイン</i>'; A.appendChild(ac);
+    });
   }
   function ggSave(){ lsSet(LS.ggCur, String(gg.cur)); lsSet(LS.ggMs, JSON.stringify(gg.ms)); lsSet(LS.ggTitle, gg.title); }
   function ggRender(){
-    document.getElementById('cumeLabel').textContent = gg.title || 'ギフリア';
+    var cap=document.getElementById('cumeLabel'); if (cap) cap.textContent = '💎 ' + (gg.title || 'ギフリア');
     document.getElementById('cumeFill').style.width = ggFill(gg.cur).toFixed(2) + '%';
-    var ticks = document.getElementById('cumeTicks').children;
-    for (var i=0;i<gg.ms.length;i++){ if (ticks[i]) ticks[i].classList.toggle('done', gg.cur>=gg.ms[i].v); }
-    var ni = ggNext(gg.cur), nx = document.getElementById('cumeNext');
-    if (ni < 0) { nx.innerHTML = '<span class="rw">全達成🎉</span>'; }
-    else {
-      var remain = gg.ms[ni].v - gg.cur;
-      nx.innerHTML = '次 ▶ <span class="rw">' + escapeHtml(ggLabel(gg.ms[ni])) + '</span> <span class="ato">あと</span> <b>' + fmtN(remain) + '</b>';
+    var L=document.getElementById('cumeLabels').children, A=document.getElementById('cumeAmounts').children, T=document.getElementById('cumeTicks').children;
+    for (var i=0;i<gg.ms.length;i++){
+      var done = gg.cur>=gg.ms[i].v;
+      if (L[i]) { L[i].classList.toggle('done', done); L[i].textContent = ggLabel(gg.ms[i]); }
+      if (A[i]) A[i].classList.toggle('done', done);
+      if (T[i]) T[i].classList.toggle('done', done);
     }
   }
   function escapeHtml(s){ return (s+'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -344,8 +352,8 @@
 
   function langTick(){
     gLang = (gLang === 'ja') ? 'en' : 'ja';
-    var n = document.getElementById('cumeNext'); if (n) { n.style.opacity = 0; }
-    setTimeout(function(){ ggRender(); srShow(); if (n) n.style.opacity = 1; }, 220);
+    var L = document.getElementById('cumeLabels'); if (L) { L.style.opacity = 0; }
+    setTimeout(function(){ ggRender(); srShow(); if (L) L.style.opacity = 1; }, 220);
   }
 
   /* ============================================================
@@ -364,7 +372,7 @@
     if (ev === 'goaltitle')   { if (msg.title!=null){ gg.title = String(msg.title); ggSave(); ggRender(); } return; }
     if (ev === 'goalms') {
       var arr = (msg.items && msg.items.length) ? msg.items.map(function(x){ return {v:Number(x.v)||0, ja:String(x.ja||''), en:String(x.en||'')}; }) : (msg.text ? ggParse(msg.text) : null);
-      if (arr && arr.length) { arr.sort(function(a,b){return a.v-b.v;}); gg.ms = arr; ggBuildTicks(); ggSave(); ggRender(); }
+      if (arr && arr.length) { arr.sort(function(a,b){return a.v-b.v;}); gg.ms = arr; ggBuild(); ggSave(); ggRender(); }
       return;
     }
     // 単発ギフト
@@ -401,7 +409,7 @@
     var gt = lsGet(LS.ggTitle); if (gt) gg.title = gt;
     try { var si = lsGet(LS.srItems); if (si) { var b = JSON.parse(si); if (Array.isArray(b) && b.length) sr.items = b.map(function(m){ return {v:Number(m.v)||0, ja:String(m.ja||''), en:String(m.en||'')}; }); } } catch(e){}
     var st = lsGet(LS.srTitle); if (st) sr.title = st;
-    ggBuildTicks(); ggRender(); srStart();
+    ggBuild(); ggRender(); srStart();
     langTimer = setInterval(langTick, 10000);
   }
 
