@@ -3,21 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>テキスト＋配信経過時間＋ゲームタイトル オーバーレイ</title>
+<title>統合バー オーバーレイ（テキスト＋タイマー＋ゲーム＋ギフト）</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
   /* ============================================================
      配色: 黒 + HOT PINK #FF007F + ACID GREEN #BAFF29
      構成: ①ヘッダー切替テキスト(マーキー) ②切替バー
            ③配信経過時間タイマー ④ゲームタイトル
-     ※ギフトギャラリー/いいねランキングは廃止
+           ⑤累計ギフリア(連続バー) ⑥単発ギフト(フリップ)
      ============================================================ */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; background: transparent; font-family: 'M PLUS Rounded 1c', sans-serif; overflow: hidden; }
-  /* ソース枠の幅・高さいっぱいに表示(LIVE Studioのソースサイズに自動フィット、左上アンカー) */
   #stage { width: 100%; height: 100%; display: flex; align-items: flex-start; justify-content: flex-start; padding: 6px; }
 
-  /* ===== 全体を1枚の四角パネルに結合(幅はソース枠いっぱい) ===== */
   #panel {
     width: 100%;
     background: rgba(6,7,9,0.85);
@@ -27,27 +25,19 @@
     box-shadow: 0 0 16px rgba(255,0,127,0.35), 0 0 26px rgba(186,255,41,0.12), inset 0 0 16px rgba(0,0,0,0.7);
     transition: border-color .4s, box-shadow .4s;
   }
-  /* 配信中(タイマー稼働)はパネル全体が呼吸する */
   #panel.live { border-color: #ff007f; box-shadow: 0 0 22px rgba(255,0,127,0.6), 0 0 44px rgba(186,255,41,0.25), inset 0 0 18px rgba(0,0,0,0.7); animation: breathe 3.2s ease-in-out infinite; }
-  #panel.idle { }
   @keyframes breathe {
     0%,100% { box-shadow: 0 0 22px rgba(255,0,127,0.45), 0 0 40px rgba(186,255,41,0.18), inset 0 0 18px rgba(0,0,0,0.7); }
     50%     { box-shadow: 0 0 32px rgba(255,0,127,0.75), 0 0 56px rgba(186,255,41,0.30), inset 0 0 18px rgba(0,0,0,0.7); }
   }
 
   /* ===== ①ヘッダー(切替テキスト・マーキー) ===== */
-  .header { display: flex; align-items: center; justify-content: center; padding: 6px 12px; height: 80px; background: transparent; overflow: hidden; position: relative; }
+  .header { display: flex; align-items: center; justify-content: center; padding: 6px 12px; height: 70px; background: transparent; overflow: hidden; position: relative; }
   .marquee-wrap { flex: 1; overflow: visible; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; }
   .marquee-line { display: flex; align-items: center; gap: 4px; height: 100%; flex-wrap: nowrap; }
   .marquee-char {
-    display: inline-block;
-    font-size: 42px;
-    font-weight: 900;
-    letter-spacing: 1.5px;
-    line-height: 1;
-    text-shadow: 0 0 6px currentColor;
-    opacity: 0;
-    transform: translateY(10px) scale(0.5);
+    display: inline-block; font-size: 40px; font-weight: 900; letter-spacing: 1.5px; line-height: 1;
+    text-shadow: 0 0 6px currentColor; opacity: 0; transform: translateY(10px) scale(0.5);
     animation: charPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
   @keyframes charPop {
@@ -56,35 +46,58 @@
     100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
   }
   .header::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, #ff007f88, transparent); animation: scan 2.5s linear infinite; pointer-events: none; }
-  @keyframes scan { from { top: 0 } to { top: 80px } }
+  @keyframes scan { from { top: 0 } to { top: 70px } }
 
-  /* ===== ②切替タイマーバー(次のメッセージ切替までを表示) ===== */
-  .switch-bar { height: 5px; margin: 0; background: rgba(255,255,255,0.10); border: none; border-radius: 0; overflow: hidden; }
+  /* ===== ②切替タイマーバー ===== */
+  .switch-bar { height: 5px; margin: 0; background: rgba(255,255,255,0.10); border: none; overflow: hidden; }
   .switch-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff007f, #baff29); box-shadow: 0 0 6px rgba(186,255,41,0.45); }
 
   /* ===== ③④ タイマー＋ゲームタイトル行 ===== */
   .body-row { display: flex; flex-direction: row; align-items: stretch; border-top: 1px solid rgba(255,0,127,0.35); }
-  .timer-sec, .title-sec { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 30px 14px; }
-  .timer-sec { flex: 0 0 auto; gap: 6px; }
-  .title-sec { flex: 1 1 0; min-width: 0; border-left: 2px solid rgba(255,0,127,0.32); gap: 10px; }
-
-  /* タイマー: 数字=ACID GREEN / ラベル=HOT PINK */
-  .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; letter-spacing: 2px; padding: 3px 14px; border-radius: 4px; background: rgba(255,0,127,0.14); color: #ff007f; }
+  .timer-sec, .title-sec { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 26px 10px; }
+  .timer-sec { flex: 0 0 auto; gap: 5px; }
+  .title-sec { flex: 1 1 0; min-width: 0; border-left: 2px solid rgba(255,0,127,0.32); gap: 8px; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; letter-spacing: 2px; padding: 3px 13px; border-radius: 4px; background: rgba(255,0,127,0.14); color: #ff007f; }
   .dot { width: 11px; height: 11px; border-radius: 50%; background: #555; }
-  .time { font-size: 64px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 2px; color: #baff29; text-shadow: 0 0 10px rgba(186,255,41,0.85), 0 0 22px rgba(186,255,41,0.45); }
-  .label { font-size: 23px; font-weight: 800; letter-spacing: 6px; color: #ff007f; text-shadow: 0 0 9px rgba(255,0,127,0.65); }
+  .time { font-size: 54px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 2px; color: #baff29; text-shadow: 0 0 10px rgba(186,255,41,0.85), 0 0 22px rgba(186,255,41,0.45); }
+  .label { font-size: 20px; font-weight: 800; letter-spacing: 5px; color: #ff007f; text-shadow: 0 0 9px rgba(255,0,127,0.65); }
+  .title-cap { width: 100%; text-align: center; font-size: 24px; font-weight: 800; letter-spacing: 3px; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.65); }
+  .title-name { width: 100%; font-size: 44px; font-weight: 800; line-height: 1.15; color: #baff29; text-align: center; text-shadow: 0 0 10px rgba(186,255,41,0.8), 0 0 20px rgba(186,255,41,0.4); word-break: break-word; overflow-wrap: anywhere; max-height: 2.4em; overflow: hidden; }
 
-  /* ゲームタイトル: キャプション=HOT PINK / タイトル=ACID GREEN */
-  .title-cap { width: 100%; text-align: center; font-size: 28px; font-weight: 800; letter-spacing: 3px; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.65); }
-  .title-name { width: 100%; font-size: 52px; font-weight: 800; line-height: 1.2; color: #baff29; text-align: center; text-shadow: 0 0 10px rgba(186,255,41,0.8), 0 0 20px rgba(186,255,41,0.4); word-break: break-word; overflow-wrap: anywhere; max-height: 2.5em; overflow: hidden; }
-
-  /* 配信中の強調 */
   #panel.live .badge { background: rgba(255,0,127,0.22); color: #ff007f; }
   #panel.live .dot { background: #ff007f; box-shadow: 0 0 8px rgba(255,0,127,0.95), 0 0 16px rgba(255,0,127,0.7); animation: blink 1.1s ease-in-out infinite; }
   #panel.live .title-sec { border-left-color: rgba(255,0,127,0.45); }
-  /* 待機中 */
   #panel.idle .label { color: #9a5f78; text-shadow: none; }
   @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  /* ===== ⑤⑥ ギフト行(累計ギフリア + 単発フリップ) ===== */
+  .gift-row { display: flex; flex-direction: row; align-items: stretch; border-top: 1px solid rgba(255,0,127,0.35); }
+  .cume-sec { flex: 1 1 0; min-width: 0; padding: 11px 20px 12px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .single-sec { flex: 0 0 auto; width: 300px; max-width: 40%; border-left: 2px solid rgba(255,0,127,0.32); padding: 8px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; overflow: hidden; }
+
+  .cume-top { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+  .cume-label { font-size: 19px; font-weight: 900; letter-spacing: 2px; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.6); white-space: nowrap; flex: 0 0 auto; }
+  .cume-next { font-size: 23px; font-weight: 800; color: #fff; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity .25s; }
+  .cume-next .rw { color: #baff29; text-shadow: 0 0 8px rgba(186,255,41,0.7); }
+  .cume-next b { color: #baff29; font-size: 27px; }
+  .cume-next .ato { color: #ff007f; font-size: 17px; }
+  .cume-barwrap { position: relative; height: 16px; }
+  .cume-track { position: absolute; inset: 0; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,0,127,0.45); overflow: hidden; }
+  .cume-fill { position: absolute; inset: 0; width: 0%; background: linear-gradient(90deg, #ff007f, #baff29); box-shadow: 0 0 8px rgba(186,255,41,0.5); transition: width .85s cubic-bezier(.22,1,.36,1); }
+  .cume-fill::after { content:""; position:absolute; inset:0; background:repeating-linear-gradient(45deg, rgba(255,255,255,.25) 0 7px, transparent 7px 14px); animation: flow 1s linear infinite; }
+  @keyframes flow { to { background-position: 20px 0; } }
+  .cume-ticks { position: absolute; inset: 0; pointer-events: none; }
+  .cume-tick { position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%; background: #0a0a0a; border: 2px solid #ff007f; transform: translate(-50%,-50%); transition: .3s; z-index: 2; }
+  .cume-tick.done { background: #baff29; border-color: #baff29; box-shadow: 0 0 8px rgba(186,255,41,0.95); }
+
+  .single-label { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: #ff007f; text-shadow: 0 0 6px rgba(255,0,127,0.5); }
+  .single-flip { display: flex; align-items: baseline; justify-content: center; gap: 7px; flex-wrap: wrap; transform-origin: center; }
+  .single-flip.go { animation: flipgo .5s cubic-bezier(.2,.72,.28,1); }
+  @keyframes flipgo { 0% { transform: rotateX(-90deg); opacity: 0; } 100% { transform: rotateX(0); opacity: 1; } }
+  .sf-th { font-size: 30px; font-weight: 900; color: #baff29; text-shadow: 0 0 9px rgba(186,255,41,0.85); line-height: 1; }
+  .sf-suf { font-size: 15px; font-weight: 900; color: #ff007f; }
+  .sf-arrow { font-size: 13px; color: #ff007f; }
+  .sf-rw { font-size: 22px; font-weight: 900; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.6); line-height: 1; }
 </style>
 </head>
 <body>
@@ -108,6 +121,25 @@
         <div class="title-name" id="gameTitle"></div>
       </div>
     </div>
+    <!-- ⑤⑥ ギフト行 -->
+    <div class="gift-row">
+      <div class="cume-sec">
+        <div class="cume-top">
+          <span class="cume-label" id="cumeLabel">ギフリア</span>
+          <span class="cume-next" id="cumeNext"></span>
+        </div>
+        <div class="cume-barwrap">
+          <div class="cume-track"><div class="cume-fill" id="cumeFill"></div></div>
+          <div class="cume-ticks" id="cumeTicks"></div>
+        </div>
+      </div>
+      <div class="single-sec">
+        <div class="single-label" id="singleLabel">1ギフトで</div>
+        <div class="single-flip" id="singleFlip">
+          <span class="sf-th" id="sfTh">100</span><span class="sf-suf" id="sfSuf">以上</span><span class="sf-arrow">▶</span><span class="sf-rw" id="sfRw">指ハート</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -115,199 +147,235 @@
 (function () {
   "use strict";
 
-  /* ============================================================
-     localStorage キー
-       ・テキスト(切替メッセージ) … 旧 combined_overlay と同一キーを維持
-       ・タイマー / ゲームタイトル … 旧 timer_overlay と同一キーを維持
-     同一オリジンで読み込めば、保存済みのメッセージ・タイマー状態を
-     そのまま引き継ぐ(手動リセットまで継続)。
-     ============================================================ */
   var STORAGE_MESSAGES = 'tikfinity_header_messages_v1';
   var LS = {
     running: 'tikfinity_timer_running_v2',
-    start:   'tikfinity_timer_start_v2',   // running中: 経過 = Date.now() - start
-    paused:  'tikfinity_timer_paused_v2',  // 一時停止/待機中に表示する凍結経過ms
-    game:    'tikfinity_game_title_v1'
+    start:   'tikfinity_timer_start_v2',
+    paused:  'tikfinity_timer_paused_v2',
+    game:    'tikfinity_game_title_v1',
+    ggCur:   'overlay_gg_cur_v1',
+    ggMs:    'overlay_gg_ms_v1',
+    ggTitle: 'overlay_gg_title_v1',
+    srItems: 'overlay_sr_items_v1',
+    srTitle: 'overlay_sr_title_v1'
   };
 
-  /* ===== ① 切替テキスト(マーキー) ===== */
-  // ※下記は「仮」のデフォルト。コントロールパネル(updateMessages)で上書きされ、
-  //   保存済みメッセージがあればそちらが優先される。実際の文言は差し替え推奨。
+  /* ===== ① 切替テキスト ===== */
   var DEFAULT_MESSAGES = [
     { text: "ようこそ！",            color: "#baff29" },
     { text: "コメント大歓迎♪",       color: "#baff29" },
     { text: "フォローしてね✨",       color: "#baff29" }
   ];
   var MSG_INTERVAL_MS = 15000;
+  var messages = DEFAULT_MESSAGES.slice(), currentMsgIdx = 0, msgTimer = null;
 
-  var messages      = DEFAULT_MESSAGES.slice();
-  var currentMsgIdx = 0;
-  var msgTimer      = null;
-
-  /* ===== ③④ タイマー / ゲームタイトル状態 ===== */
-  var running   = false;  // 計測中か
-  var startMs   = 0;      // running中の起点(絶対時刻)。経過 = now - startMs
-  var pausedMs  = 0;      // 一時停止/待機中に表示する経過ms
-  var gameTitle = '';
-
-  var panel       = document.getElementById('panel');
-  var tEl         = document.getElementById('t');
-  var badgeText   = document.getElementById('badgeText');
-  var titleBox    = document.getElementById('titleBox');
+  /* ===== ③④ タイマー / ゲームタイトル ===== */
+  var running = false, startMs = 0, pausedMs = 0, gameTitle = '';
+  var panel = document.getElementById('panel');
+  var tEl = document.getElementById('t');
+  var badgeText = document.getElementById('badgeText');
+  var titleBox = document.getElementById('titleBox');
   var gameTitleEl = document.getElementById('gameTitle');
+
+  /* ===== ⑤ 累計ギフリア / ⑥ 単発 ===== */
+  var DEFAULT_GG_MS = [
+    {v:3000,ja:'ファンファーレ',en:'Fanfare'},
+    {v:5000,ja:'派手系SFX',en:'Flashy SFX'},
+    {v:10000,ja:'専用演出',en:'Special FX'},
+    {v:15000,ja:'2カメON＋1枚脱ぐ',en:'Cam2 ON + Strip 1'},
+    {v:50000,ja:'3日間メイド服で配信',en:'3-Day Maid Stream'}
+  ];
+  var DEFAULT_SR_ITEMS = [
+    {v:100,ja:'指ハート',en:'Finger heart'},
+    {v:500,ja:'ハンドハートポーズ',en:'Hand heart pose'},
+    {v:1000,ja:'投げキッス',en:'Blow a kiss'}
+  ];
+  var gg = { title:'ギフリア', ms: DEFAULT_GG_MS.slice(), cur:0 };
+  var sr = { title:'1ギフトで', items: DEFAULT_SR_ITEMS.slice() };
+  var gLang = 'ja';           // 共有言語(10秒切替)
+  var srIdx = 0, srTimer = null, langTimer = null;
 
   function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
   function getQuery(name){ try { return new URLSearchParams(location.search).get(name); } catch(e){ return null; } }
+  function fmtN(n){ return Math.round(n).toLocaleString('ja-JP'); }
 
   /* ============================================================
      ① 切替テキスト ロジック
      ============================================================ */
-  function persistMessages() {
-    try { localStorage.setItem(STORAGE_MESSAGES, JSON.stringify(messages)); } catch (e) {}
-  }
+  function persistMessages() { try { localStorage.setItem(STORAGE_MESSAGES, JSON.stringify(messages)); } catch (e) {} }
   function loadMessages() {
-    try {
-      var m = localStorage.getItem(STORAGE_MESSAGES);
-      if (m) {
-        var arr = JSON.parse(m);
-        if (Array.isArray(arr) && arr.length > 0) messages = arr;
-      }
-    } catch (e) {}
+    try { var m = localStorage.getItem(STORAGE_MESSAGES); if (m) { var arr = JSON.parse(m); if (Array.isArray(arr) && arr.length > 0) messages = arr; } } catch (e) {}
   }
   function resetSwitchBar() {
-    var f = document.getElementById('switchBarFill');
-    if (!f) return;
+    var f = document.getElementById('switchBarFill'); if (!f) return;
     if (messages.length <= 1) { f.style.transition = 'none'; f.style.width = '0%'; return; }
-    f.style.transition = 'none';
-    f.style.width = '0%';
-    void f.offsetWidth;
-    f.style.transition = 'width ' + (MSG_INTERVAL_MS / 1000) + 's linear';
-    f.style.width = '100%';
+    f.style.transition = 'none'; f.style.width = '0%'; void f.offsetWidth;
+    f.style.transition = 'width ' + (MSG_INTERVAL_MS / 1000) + 's linear'; f.style.width = '100%';
   }
   function showMessage(idx) {
-    var wrap = document.getElementById('marqueeWrap');
-    if (!wrap) return;
-    wrap.textContent = '';
-    var msg = messages[idx];
-    if (!msg) return;
-    var line = document.createElement('div');
-    line.className = 'marquee-line';
-    line.style.color = msg.color || '#ffffff';
+    var wrap = document.getElementById('marqueeWrap'); if (!wrap) return;
+    wrap.textContent = ''; var msg = messages[idx]; if (!msg) return;
+    var line = document.createElement('div'); line.className = 'marquee-line'; line.style.color = msg.color || '#ffffff';
     var text = String(msg.text || '');
     Array.from(text).forEach(function(c, i) {
-      var charSpan = document.createElement('span');
-      charSpan.className = 'marquee-char';
-      charSpan.textContent = (c === ' ') ? ' ' : c;
-      charSpan.style.animationDelay = (60 + i * 55) + 'ms';
-      line.appendChild(charSpan);
+      var charSpan = document.createElement('span'); charSpan.className = 'marquee-char';
+      charSpan.textContent = (c === ' ') ? ' ' : c; charSpan.style.animationDelay = (60 + i * 55) + 'ms'; line.appendChild(charSpan);
     });
-    wrap.appendChild(line);
-    resetSwitchBar();
+    wrap.appendChild(line); resetSwitchBar();
   }
-  function nextMessage() {
-    if (messages.length === 0) return;
-    currentMsgIdx = (currentMsgIdx + 1) % messages.length;
-    showMessage(currentMsgIdx);
-  }
+  function nextMessage() { if (messages.length === 0) return; currentMsgIdx = (currentMsgIdx + 1) % messages.length; showMessage(currentMsgIdx); }
   function startMessageLoop() {
     if (msgTimer) { clearInterval(msgTimer); msgTimer = null; }
     if (messages.length === 0) return;
     if (currentMsgIdx >= messages.length) currentMsgIdx = 0;
     showMessage(currentMsgIdx);
-    if (messages.length > 1) {
-      msgTimer = setInterval(nextMessage, MSG_INTERVAL_MS);
-    }
+    if (messages.length > 1) msgTimer = setInterval(nextMessage, MSG_INTERVAL_MS);
   }
   function applyNewMessages(newList) {
     if (!Array.isArray(newList)) return;
     messages = newList.length > 0 ? newList : DEFAULT_MESSAGES.slice();
-    currentMsgIdx = 0;
-    persistMessages();
-    startMessageLoop();
+    currentMsgIdx = 0; persistMessages(); startMessageLoop();
   }
 
   /* ============================================================
-     ③ タイマー / ④ ゲームタイトル ロジック
+     ③④ タイマー / ゲームタイトル ロジック
      ============================================================ */
-  function save(){
-    lsSet(LS.running, running ? '1' : '0');
-    lsSet(LS.start,   String(startMs));
-    lsSet(LS.paused,  String(pausedMs));
-  }
+  function save(){ lsSet(LS.running, running ? '1' : '0'); lsSet(LS.start, String(startMs)); lsSet(LS.paused, String(pausedMs)); }
   function two(n){ return (n < 10 ? '0' : '') + n; }
   function fmt(ms){
     if (!isFinite(ms) || ms < 0) ms = 0;
-    var s = Math.floor(ms / 1000);
-    var h = Math.floor(s / 3600);
-    var m = Math.floor((s % 3600) / 60);
-    var ss = s % 60;
+    var s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
     return two(h) + ':' + two(m) + ':' + two(ss);
   }
   function elapsed(){ return running ? (Date.now() - startMs) : pausedMs; }
-
   function render(){
-    if (running) {
-      panel.className = 'live';
-      badgeText.textContent = 'LIVE';
-      tEl.textContent = fmt(Date.now() - startMs);
-    } else if (pausedMs > 0) {
-      panel.className = 'idle';
-      badgeText.textContent = '一時停止';
-      tEl.textContent = fmt(pausedMs);
-    } else {
-      panel.className = 'idle';
-      badgeText.textContent = '待機中';
-      tEl.textContent = '00:00:00';
-    }
+    if (running) { panel.className = 'live'; badgeText.textContent = 'LIVE'; tEl.textContent = fmt(Date.now() - startMs); }
+    else if (pausedMs > 0) { panel.className = 'idle'; badgeText.textContent = '一時停止'; tEl.textContent = fmt(pausedMs); }
+    else { panel.className = 'idle'; badgeText.textContent = '待機中'; tEl.textContent = '00:00:00'; }
   }
-
   function applyGameTitle(title){
     gameTitle = (title == null ? '' : String(title)).trim();
-    if (gameTitle) {
-      gameTitleEl.textContent = gameTitle;
-      titleBox.style.display = '';
-    } else {
-      gameTitleEl.textContent = '';
-      titleBox.style.display = 'none';
-    }
+    if (gameTitle) { gameTitleEl.textContent = gameTitle; titleBox.style.display = ''; }
+    else { gameTitleEl.textContent = ''; titleBox.style.display = 'none'; }
     lsSet(LS.game, gameTitle);
   }
-
-  /* タイマー制御: コントロールパネル(ws://localhost:21214)からの状態だけで動作。
-     配信イベント(gift/like等)による自動スタート/停止/リセットは行わない。
-     メッセージ形式: { event:'timerControl', running:<bool>, elapsedMs:<int>, at:<epoch ms> } */
   function applyTimerControl(msg){
     var isRun = !!msg.running;
     var el = Number(msg.elapsedMs); if (!isFinite(el) || el < 0) el = 0;
-    var at = Number(msg.at);        if (!isFinite(at) || at <= 0) at = Date.now();
-    if (isRun) {
-      startMs = at - el;   // 絶対起点。受信が多少遅れても経過は正しく進む
-      running = true;
-    } else {
-      pausedMs = el;
-      running = false;
+    var at = Number(msg.at); if (!isFinite(at) || at <= 0) at = Date.now();
+    if (isRun) { startMs = at - el; running = true; } else { pausedMs = el; running = false; }
+    save(); render();
+  }
+
+  /* ============================================================
+     ⑤ 累計ギフリア ロジック(合計数は表示しない・連続バー＋ティック＋次の目標)
+     ============================================================ */
+  function ggParse(text){
+    var out = [];
+    (text||'').split(/\n+/).forEach(function(line){
+      line = line.trim(); if (!line) return;
+      var p = line.indexOf('|') >= 0 ? line.split('|') : line.split(/[:：]/);
+      var v = parseInt((p[0]||'').replace(/[^0-9]/g,''),10); if (!(v>0)) return;
+      out.push({ v:v, ja:(p[1]||'').trim(), en:(p[2]||'').trim() });
+    });
+    out.sort(function(a,b){ return a.v-b.v; }); return out;
+  }
+  function ggLabel(m){ return gLang==='en' ? (m.en||m.ja||'') : (m.ja||m.en||''); }
+  function ggFill(cur){
+    var ms = gg.ms, n = ms.length; if (!n) return 0;
+    var thr = [0]; for (var i=0;i<n;i++) thr.push(ms[i].v);
+    if (cur<=0) return 0; if (cur>=thr[n]) return 100;
+    for (var j=0;j<n;j++){ if (cur<thr[j+1]){ var sp=thr[j+1]-thr[j]; var f= sp>0?(cur-thr[j])/sp:0; return (j+f)/n*100; } }
+    return 100;
+  }
+  function ggNext(cur){ for (var i=0;i<gg.ms.length;i++){ if (cur<gg.ms[i].v) return i; } return -1; }
+  function ggBuildTicks(){
+    var box = document.getElementById('cumeTicks'); if (!box) return;
+    box.innerHTML = ''; var n = gg.ms.length;
+    gg.ms.forEach(function(m,k){ var t=document.createElement('div'); t.className='cume-tick'; t.style.left=((k+1)/n*100)+'%'; box.appendChild(t); });
+  }
+  function ggSave(){ lsSet(LS.ggCur, String(gg.cur)); lsSet(LS.ggMs, JSON.stringify(gg.ms)); lsSet(LS.ggTitle, gg.title); }
+  function ggRender(){
+    document.getElementById('cumeLabel').textContent = gg.title || 'ギフリア';
+    document.getElementById('cumeFill').style.width = ggFill(gg.cur).toFixed(2) + '%';
+    var ticks = document.getElementById('cumeTicks').children;
+    for (var i=0;i<gg.ms.length;i++){ if (ticks[i]) ticks[i].classList.toggle('done', gg.cur>=gg.ms[i].v); }
+    var ni = ggNext(gg.cur), nx = document.getElementById('cumeNext');
+    if (ni < 0) { nx.innerHTML = '<span class="rw">全達成🎉</span>'; }
+    else {
+      var remain = gg.ms[ni].v - gg.cur;
+      nx.innerHTML = '次 ▶ <span class="rw">' + escapeHtml(ggLabel(gg.ms[ni])) + '</span> <span class="ato">あと</span> <b>' + fmtN(remain) + '</b>';
     }
-    save();
-    render();
+  }
+  function escapeHtml(s){ return (s+'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  /* ============================================================
+     ⑥ 単発ギフト ロジック(フリップで順送り)
+     ============================================================ */
+  function srParse(text){
+    var out = [];
+    (text||'').split(/\n+/).forEach(function(line){
+      line = line.trim(); if (!line) return;
+      var p = line.split('|');
+      var v = parseInt((p[0]||'').replace(/[^0-9]/g,''),10); if (!(v>0)) return;
+      out.push({ v:v, ja:(p[1]||'').trim(), en:(p[2]||'').trim() });
+    });
+    out.sort(function(a,b){ return a.v-b.v; }); return out;
+  }
+  function srReact(m){ return gLang==='en' ? (m.en||m.ja||'') : (m.ja||m.en||''); }
+  function srSuf(){ return gLang==='en' ? '+' : '以上'; }
+  function srSave(){ lsSet(LS.srItems, JSON.stringify(sr.items)); lsSet(LS.srTitle, sr.title); }
+  function srShow(){
+    if (srIdx >= sr.items.length) srIdx = 0;
+    var m = sr.items[srIdx]; if (!m) return;
+    document.getElementById('singleLabel').textContent = sr.title || '1ギフトで';
+    document.getElementById('sfTh').textContent = fmtN(m.v);
+    document.getElementById('sfSuf').textContent = srSuf();
+    document.getElementById('sfRw').textContent = srReact(m);
+  }
+  function srFlip(){ var el=document.getElementById('singleFlip'); el.classList.remove('go'); void el.offsetWidth; el.classList.add('go'); }
+  function srAdvance(){
+    if (sr.items.length === 0) return;
+    srIdx = (srIdx + 1) % sr.items.length;
+    srShow(); srFlip();
+  }
+  function srStart(){ if (srTimer) clearInterval(srTimer); srShow(); srTimer = setInterval(srAdvance, 4000); }
+
+  function langTick(){
+    gLang = (gLang === 'ja') ? 'en' : 'ja';
+    var n = document.getElementById('cumeNext'); if (n) { n.style.opacity = 0; }
+    setTimeout(function(){ ggRender(); srShow(); if (n) n.style.opacity = 1; }, 220);
   }
 
   /* ============================================================
      統合 WebSocket 受信ハンドラ
-       timerControl  → タイマー制御
-       setGameTitle  → ゲームタイトル更新
-       updateMessages→ 切替テキスト更新
-       それ以外(gift/like/chat/connected/config/streamEnd 等)は無視。
      ============================================================ */
   function handleMessage(msg){
     if (!msg || !msg.event) return;
-    var ev = msg.event;
-    if (ev === 'timerControl')   { applyTimerControl(msg);      return; }
-    if (ev === 'setGameTitle')   { applyGameTitle(msg.title);   return; }
-    if (ev === 'updateMessages') { applyNewMessages(msg.messages); return; }
+    var ev = ('' + msg.event).toLowerCase();
+    if (ev === 'timercontrol')   { applyTimerControl(msg); return; }
+    if (ev === 'setgametitle')   { applyGameTitle(msg.title); return; }
+    if (ev === 'updatemessages') { applyNewMessages(msg.messages); return; }
+    // 累計ギフリア
+    if (ev === 'goalcurrent') { gg.cur = Number(msg.value)||0; ggSave(); ggRender(); return; }
+    if (ev === 'goaladd')     { gg.cur = Math.max(0, gg.cur + (Number(msg.value)||0)); ggSave(); ggRender(); return; }
+    if (ev === 'goalreset')   { gg.cur = 0; ggSave(); ggRender(); return; }
+    if (ev === 'goaltitle')   { if (msg.title!=null){ gg.title = String(msg.title); ggSave(); ggRender(); } return; }
+    if (ev === 'goalms') {
+      var arr = (msg.items && msg.items.length) ? msg.items.map(function(x){ return {v:Number(x.v)||0, ja:String(x.ja||''), en:String(x.en||'')}; }) : (msg.text ? ggParse(msg.text) : null);
+      if (arr && arr.length) { arr.sort(function(a,b){return a.v-b.v;}); gg.ms = arr; ggBuildTicks(); ggSave(); ggRender(); }
+      return;
+    }
+    // 単発ギフト
+    if (ev === 'reacttitle') { if (msg.ja!=null) sr.title = String(msg.ja); srSave(); srShow(); return; }
+    if (ev === 'reactlist') {
+      var a2 = (msg.items && msg.items.length) ? msg.items.map(function(x){ return {v:Number(x.v)||0, ja:String(x.ja||''), en:String(x.en||'')}; }) : (msg.text ? srParse(msg.text) : null);
+      if (a2 && a2.length) { a2.sort(function(a,b){return a.v-b.v;}); sr.items = a2; srIdx = 0; srSave(); srShow(); }
+      return;
+    }
   }
 
-  /* ===== WS接続(本番=21213 TikFinity / 操作パネル=21214 中継) ===== */
   function connect(url){
     var ws;
     try { ws = new WebSocket(url); }
@@ -319,17 +387,22 @@
 
   /* ===== 初期化 ===== */
   function init(){
-    // テキスト
-    loadMessages();
-    startMessageLoop();
-    // タイマー / ゲームタイトル(再読込されても前回状態を復元して継続)
+    loadMessages(); startMessageLoop();
     applyGameTitle(lsGet(LS.game) || '');
     running  = lsGet(LS.running) === '1';
     startMs  = Number(lsGet(LS.start))  || 0;
     pausedMs = Number(lsGet(LS.paused)) || 0;
-    if (running && (!startMs || startMs > Date.now() + 2000)) startMs = Date.now(); // 異常値ガード
-    render();
-    setInterval(render, 250);
+    if (running && (!startMs || startMs > Date.now() + 2000)) startMs = Date.now();
+    render(); setInterval(render, 250);
+
+    // ギフト状態の復元
+    try { var gm = lsGet(LS.ggMs); if (gm) { var a = JSON.parse(gm); if (Array.isArray(a) && a.length) gg.ms = a.map(function(m){ return {v:Number(m.v)||0, ja:String(m.ja||''), en:String(m.en||'')}; }); } } catch(e){}
+    gg.cur = Number(lsGet(LS.ggCur)) || 0;
+    var gt = lsGet(LS.ggTitle); if (gt) gg.title = gt;
+    try { var si = lsGet(LS.srItems); if (si) { var b = JSON.parse(si); if (Array.isArray(b) && b.length) sr.items = b.map(function(m){ return {v:Number(m.v)||0, ja:String(m.ja||''), en:String(m.en||'')}; }); } } catch(e){}
+    var st = lsGet(LS.srTitle); if (st) sr.title = st;
+    ggBuildTicks(); ggRender(); srStart();
+    langTimer = setInterval(langTick, 10000);
   }
 
   /* ===== テスト/外部公開フック ===== */
@@ -337,31 +410,21 @@
   window.applyNewMessages = applyNewMessages;
   window.setGameTitle     = applyGameTitle;
   window.timerState       = function(){ return { running: running, startMs: startMs, pausedMs: pausedMs, elapsedMs: elapsed(), gameTitle: gameTitle }; };
-  window.overlayMessages  = function(){ return messages.slice(); };
+  window.giftState        = function(){ return { ggCur: gg.cur, ggMs: gg.ms.slice(), srItems: sr.items.slice(), lang: gLang }; };
 
   init();
 
-  /* ============================================================
-     プレビュー/デモ表示  ?demo=1  または  ?demo=ゲーム名
-       WS・コントロールパネル無しでも「テキスト＋稼働タイマー＋ゲームタイトル」
-       の見え方を確認するためのサンプル表示。localStorageには一切保存しない
-       (本番状態を汚さない)。本番ソースURLには付けないこと。確認後は ?demo を外す。
-     ============================================================ */
+  /* ===== プレビュー/デモ  ?demo=1 / ?demo=ゲーム名 ===== */
   (function(){
-    var demo = getQuery('demo');
-    if (demo === null) return;
+    var demo = getQuery('demo'); if (demo === null) return;
     if (!lsGet(STORAGE_MESSAGES)) {
-      messages = [
-        { text: "プレビュー表示中", color: "#baff29" },
-        { text: "コメント大歓迎♪", color: "#ff007f" }
-      ];
-      currentMsgIdx = 0;
-      startMessageLoop();
+      messages = [ { text: "プレビュー表示中", color: "#baff29" }, { text: "コメント大歓迎♪", color: "#ff007f" } ];
+      currentMsgIdx = 0; startMessageLoop();
     }
     running = true; pausedMs = 0; startMs = Date.now() - ((1 * 3600 + 23 * 60 + 45) * 1000);
     var dt = (demo && demo !== '1' && demo.toLowerCase() !== 'true') ? demo : 'War Thunder';
-    gameTitle = dt; gameTitleEl.textContent = dt; titleBox.style.display = '';
-    render();
+    gameTitle = dt; gameTitleEl.textContent = dt; titleBox.style.display = ''; render();
+    if (!lsGet(LS.ggCur)) { gg.cur = 8000; ggRender(); }   // 2段達成のプレビュー
   })();
 
   connect("ws://localhost:21213/");
