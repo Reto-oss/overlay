@@ -95,7 +95,7 @@
   .cume-tick { position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%; background: #0a0a0a; border: 3px solid #ff007f; transform: translate(-50%,-50%); transition: .3s; z-index: 2; box-shadow: 0 0 0 2px rgba(10,10,12,0.9); }
   .cume-tick.done { background: #ffffff; border-color: #ff007f; box-shadow: 0 0 0 3px rgba(10,10,12,0.95), 0 0 11px rgba(255,255,255,0.95); }
 
-  .single-label { font-size: 17px; font-weight: 800; letter-spacing: 2px; color: #ff007f; text-shadow: 0 0 6px rgba(255,0,127,0.5); }
+  .single-label { font-size: 23px; font-weight: 900; letter-spacing: 2px; color: #ff007f; text-shadow: 0 0 7px rgba(255,0,127,0.55); }
   .single-flip { display: flex; align-items: baseline; justify-content: center; gap: 8px; flex-wrap: wrap; transform-origin: center; }
   .single-flip.go { animation: flipgo .5s cubic-bezier(.2,.72,.28,1); }
   @keyframes flipgo { 0% { transform: rotateX(-90deg); opacity: 0; } 100% { transform: rotateX(0); opacity: 1; } }
@@ -119,10 +119,10 @@
       <div class="timer-sec">
         <div class="badge"><span class="dot"></span><span id="badgeText">待機中</span></div>
         <div class="time"><span id="t">00:00:00</span></div>
-        <div class="label">配信経過時間</div>
+        <div class="label" id="timerLabel">配信経過時間</div>
       </div>
       <div class="title-sec" id="titleBox" style="display:none">
-        <div class="title-cap">🎮 タイトル</div>
+        <div class="title-cap" id="titleCap">🎮 タイトル</div>
         <div class="title-name" id="gameTitle"></div>
       </div>
       <div class="single-sec">
@@ -195,7 +195,7 @@
     {v:1000,ja:'投げキッス',en:'Blow a kiss'}
   ];
   var gg = { title:'ギフリア', ms: DEFAULT_GG_MS.slice(), cur:0 };
-  var sr = { title:'1ギフトで', items: DEFAULT_SR_ITEMS.slice() };
+  var sr = { title:{ ja:'1ギフトで', en:'Single gift' }, items: DEFAULT_SR_ITEMS.slice() };
   var gLang = 'ja';           // 共有言語(10秒切替)
   var srIdx = 0, srTimer = null, langTimer = null;
 
@@ -254,9 +254,10 @@
   }
   function elapsed(){ return running ? (Date.now() - startMs) : pausedMs; }
   function render(){
+    var en = (gLang === 'en');
     if (running) { panel.className = 'live'; badgeText.textContent = 'LIVE'; tEl.textContent = fmt(Date.now() - startMs); }
-    else if (pausedMs > 0) { panel.className = 'idle'; badgeText.textContent = '一時停止'; tEl.textContent = fmt(pausedMs); }
-    else { panel.className = 'idle'; badgeText.textContent = '待機中'; tEl.textContent = '00:00:00'; }
+    else if (pausedMs > 0) { panel.className = 'idle'; badgeText.textContent = en ? 'PAUSED' : '一時停止'; tEl.textContent = fmt(pausedMs); }
+    else { panel.className = 'idle'; badgeText.textContent = en ? 'STANDBY' : '待機中'; tEl.textContent = '00:00:00'; }
   }
   function applyGameTitle(title){
     gameTitle = (title == null ? '' : String(title)).trim();
@@ -333,11 +334,11 @@
   }
   function srReact(m){ return gLang==='en' ? (m.en||m.ja||'') : (m.ja||m.en||''); }
   function srSuf(){ return gLang==='en' ? '+' : '以上'; }
-  function srSave(){ lsSet(LS.srItems, JSON.stringify(sr.items)); lsSet(LS.srTitle, sr.title); }
+  function srSave(){ lsSet(LS.srItems, JSON.stringify(sr.items)); lsSet(LS.srTitle, JSON.stringify(sr.title)); }
   function srShow(){
     if (srIdx >= sr.items.length) srIdx = 0;
     var m = sr.items[srIdx]; if (!m) return;
-    document.getElementById('singleLabel').textContent = sr.title || '1ギフトで';
+    document.getElementById('singleLabel').textContent = (gLang==='en' ? (sr.title.en||sr.title.ja) : (sr.title.ja||sr.title.en)) || '1ギフトで';
     document.getElementById('sfTh').textContent = fmtN(m.v);
     document.getElementById('sfSuf').textContent = srSuf();
     document.getElementById('sfRw').textContent = srReact(m);
@@ -350,9 +351,15 @@
   }
   function srStart(){ if (srTimer) clearInterval(srTimer); srShow(); srTimer = setInterval(srAdvance, 4000); }
 
+  function applyUiLang(){
+    var en = (gLang === 'en');
+    var tc = document.getElementById('titleCap');  if (tc) tc.textContent = en ? '🎮 TITLE' : '🎮 タイトル';
+    var tl = document.getElementById('timerLabel'); if (tl) tl.textContent = en ? 'STREAM TIME' : '配信経過時間';
+  }
   function langTick(){
     gLang = (gLang === 'ja') ? 'en' : 'ja';
     var L = document.getElementById('cumeLabels'); if (L) { L.style.opacity = 0; }
+    applyUiLang(); render();
     setTimeout(function(){ ggRender(); srShow(); if (L) L.style.opacity = 1; }, 220);
   }
 
@@ -376,7 +383,7 @@
       return;
     }
     // 単発ギフト
-    if (ev === 'reacttitle') { if (msg.ja!=null) sr.title = String(msg.ja); srSave(); srShow(); return; }
+    if (ev === 'reacttitle') { if (msg.ja!=null) sr.title.ja = String(msg.ja); if (msg.en!=null) sr.title.en = String(msg.en); srSave(); srShow(); return; }
     if (ev === 'reactlist') {
       var a2 = (msg.items && msg.items.length) ? msg.items.map(function(x){ return {v:Number(x.v)||0, ja:String(x.ja||''), en:String(x.en||'')}; }) : (msg.text ? srParse(msg.text) : null);
       if (a2 && a2.length) { a2.sort(function(a,b){return a.v-b.v;}); sr.items = a2; srIdx = 0; srSave(); srShow(); }
@@ -408,8 +415,8 @@
     gg.cur = Number(lsGet(LS.ggCur)) || 0;
     var gt = lsGet(LS.ggTitle); if (gt) gg.title = gt;
     try { var si = lsGet(LS.srItems); if (si) { var b = JSON.parse(si); if (Array.isArray(b) && b.length) sr.items = b.map(function(m){ return {v:Number(m.v)||0, ja:String(m.ja||''), en:String(m.en||'')}; }); } } catch(e){}
-    var st = lsGet(LS.srTitle); if (st) sr.title = st;
-    ggBuild(); ggRender(); srStart();
+    var st = lsGet(LS.srTitle); if (st) { try { var so = JSON.parse(st); if (so && typeof so === 'object') { sr.title = { ja: String(so.ja||sr.title.ja), en: String(so.en||sr.title.en) }; } else { sr.title.ja = String(st); } } catch(e){ sr.title.ja = String(st); } }
+    ggBuild(); ggRender(); srStart(); applyUiLang();
     langTimer = setInterval(langTick, 10000);
   }
 
