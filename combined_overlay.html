@@ -196,8 +196,9 @@
   ];
   var gg = { title:'ギフリア', ms: DEFAULT_GG_MS.slice(), cur:0 };
   var sr = { title:{ ja:'1ギフトで', en:'Single gift' }, items: DEFAULT_SR_ITEMS.slice() };
-  var gLang = 'ja';           // 共有言語(10秒切替)
-  var srIdx = 0, srTimer = null, langTimer = null;
+  var gLang = 'ja';           // 累計/UIラベルの共有言語(10秒切替)
+  var srStep = 0, srTimer = null, langTimer = null;  // 単発は独立サイクル
+  var SR_INTERVAL = 5000;     // 単発の1ステップ表示時間(等間隔・読める速さ)
 
   function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
@@ -332,24 +333,24 @@
     });
     out.sort(function(a,b){ return a.v-b.v; }); return out;
   }
-  function srReact(m){ return gLang==='en' ? (m.en||m.ja||'') : (m.ja||m.en||''); }
-  function srSuf(){ return gLang==='en' ? '+' : '以上'; }
   function srSave(){ lsSet(LS.srItems, JSON.stringify(sr.items)); lsSet(LS.srTitle, JSON.stringify(sr.title)); }
   function srShow(){
-    if (srIdx >= sr.items.length) srIdx = 0;
-    var m = sr.items[srIdx]; if (!m) return;
-    document.getElementById('singleLabel').textContent = (gLang==='en' ? (sr.title.en||sr.title.ja) : (sr.title.ja||sr.title.en)) || '1ギフトで';
+    var n = sr.items.length; if (n === 0) return;
+    var st = srStep % (n * 2);
+    var m = sr.items[Math.floor(st / 2)]; if (!m) return;
+    var en = (st % 2 === 1);   // 偶数ステップ=日本語 / 奇数ステップ=英語
+    document.getElementById('singleLabel').textContent = (en ? (sr.title.en||sr.title.ja) : (sr.title.ja||sr.title.en)) || '1ギフトで';
     document.getElementById('sfTh').textContent = fmtN(m.v);
-    document.getElementById('sfSuf').textContent = srSuf();
-    document.getElementById('sfRw').textContent = srReact(m);
+    document.getElementById('sfSuf').textContent = en ? '+' : '以上';
+    document.getElementById('sfRw').textContent = en ? (m.en||m.ja||'') : (m.ja||m.en||'');
   }
   function srFlip(){ var el=document.getElementById('singleFlip'); el.classList.remove('go'); void el.offsetWidth; el.classList.add('go'); }
   function srAdvance(){
     if (sr.items.length === 0) return;
-    srIdx = (srIdx + 1) % sr.items.length;
+    srStep = (srStep + 1) % (sr.items.length * 2);
     srShow(); srFlip();
   }
-  function srStart(){ if (srTimer) clearInterval(srTimer); srShow(); srTimer = setInterval(srAdvance, 4000); }
+  function srStart(){ if (srTimer) clearInterval(srTimer); srStep = 0; srShow(); srTimer = setInterval(srAdvance, SR_INTERVAL); }
 
   function applyUiLang(){
     var en = (gLang === 'en');
@@ -360,7 +361,7 @@
     gLang = (gLang === 'ja') ? 'en' : 'ja';
     var L = document.getElementById('cumeLabels'); if (L) { L.style.opacity = 0; }
     applyUiLang(); render();
-    setTimeout(function(){ ggRender(); srShow(); if (L) L.style.opacity = 1; }, 220);
+    setTimeout(function(){ ggRender(); if (L) L.style.opacity = 1; }, 220);
   }
 
   /* ============================================================
@@ -386,7 +387,7 @@
     if (ev === 'reacttitle') { if (msg.ja!=null) sr.title.ja = String(msg.ja); if (msg.en!=null) sr.title.en = String(msg.en); srSave(); srShow(); return; }
     if (ev === 'reactlist') {
       var a2 = (msg.items && msg.items.length) ? msg.items.map(function(x){ return {v:Number(x.v)||0, ja:String(x.ja||''), en:String(x.en||'')}; }) : (msg.text ? srParse(msg.text) : null);
-      if (a2 && a2.length) { a2.sort(function(a,b){return a.v-b.v;}); sr.items = a2; srIdx = 0; srSave(); srShow(); }
+      if (a2 && a2.length) { a2.sort(function(a,b){return a.v-b.v;}); sr.items = a2; srStep = 0; srSave(); srShow(); }
       return;
     }
   }
