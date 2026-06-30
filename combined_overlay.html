@@ -64,6 +64,9 @@
   .title-cap { width: 100%; text-align: center; font-size: 24px; font-weight: 800; letter-spacing: 3px; color: #ff007f; text-shadow: 0 0 8px rgba(255,0,127,0.65); }
   .title-name { width: 100%; font-size: 44px; font-weight: 800; line-height: 1.15; color: #baff29; text-align: center; text-shadow: 0 0 10px rgba(186,255,41,0.8), 0 0 20px rgba(186,255,41,0.4); word-break: break-word; overflow-wrap: anywhere; max-height: 2.4em; overflow: hidden; }
 
+  /* タイマー非表示: 枠(高さ)は残して中身(バッジ/時間/ラベル)だけ空欄にする */
+  .timer-sec.tm-hidden > * { visibility: hidden; }
+
   #panel.live .badge { background: rgba(255,0,127,0.22); color: #ff007f; }
   #panel.live .dot { background: #ff007f; box-shadow: 0 0 8px rgba(255,0,127,0.95), 0 0 16px rgba(255,0,127,0.7); animation: blink 1.1s ease-in-out infinite; }
   #panel.live .title-sec { border-left-color: rgba(255,0,127,0.45); }
@@ -116,7 +119,7 @@
     <div class="switch-bar"><div class="switch-bar-fill" id="switchBarFill"></div></div>
     <!-- ③④⑥ タイマー + ゲームタイトル + 単発ギフリア(タイトルの右) -->
     <div class="body-row">
-      <div class="timer-sec">
+      <div class="timer-sec" id="timerSec">
         <div class="badge"><span class="dot"></span><span id="badgeText">待機中</span></div>
         <div class="time"><span id="t">00:00:00</span></div>
         <div class="label" id="timerLabel">配信経過時間</div>
@@ -156,6 +159,7 @@
     start:   'tikfinity_timer_start_v2',
     paused:  'tikfinity_timer_paused_v2',
     game:    'tikfinity_game_title_v1',
+    timerVisible: 'tikfinity_timer_visible_v1',
     ggCur:   'overlay_gg_cur_v1',
     ggMs:    'overlay_gg_ms_v1',
     ggTitle: 'overlay_gg_title_v1',
@@ -195,6 +199,12 @@
   ];
   var gg = { title:'ギフリア', ms: DEFAULT_GG_MS.slice(), cur:0 };
   var sr = { title:{ ja:'1ギフトで', en:'Single gift' }, items: DEFAULT_SR_ITEMS.slice() };
+
+  /* ===== TikFinity ギフト自動加算(段階目標) ===== */
+  var GG_AUTO  = true;   // TikFinityのギフトで累計ギフリア(gg.cur)を自動加算（?ggauto=0 で無効）
+  var GG_MULT  = 1;      // ダイヤ→コイン換算倍率（既定1:1 / ?mult=2 等で変更）
+  var GG_DEBUG = false;  // ?debug=1 でF12コンソールにギフトログを出す
+
   var gLang = 'ja';           // 累計/UIラベルの共有言語(10秒切替)
   var srStep = 0, srTimer = null, langTimer = null;  // 単発は独立サイクル
   var SR_INTERVAL = 5000;     // 単発の1ステップ表示時間(等間隔・読める速さ)
@@ -271,6 +281,14 @@
     var at = Number(msg.at); if (!isFinite(at) || at <= 0) at = Date.now();
     if (isRun) { startMs = at - el; running = true; } else { pausedMs = el; running = false; }
     save(); render();
+  }
+  /* ===== タイマー表示/非表示(空欄) ===== */
+  var timerSec = document.getElementById('timerSec');
+  var timerVisible = false;   // 既定=非表示(空欄)。パネルの「再表示」で表示
+  function applyTimerVisible(v){
+    timerVisible = !!v;
+    if (timerSec) timerSec.classList.toggle('tm-hidden', !timerVisible);
+    lsSet(LS.timerVisible, timerVisible ? '1' : '0');
   }
 
   /* ============================================================
@@ -364,6 +382,40 @@
   }
 
   /* ============================================================
+     ★ TikFinity 生ギフトイベント → 累計ギフリア(gg.cur)を自動加算
+        対応フィールドを総当たりで拾う（diamondCount/coins ほか）。
+        連打(streak)中は二重加算を避け、終了時にまとめて加算する。
+     ============================================================ */
+  function ggDbg(){ if (GG_DEBUG) { try { console.log.apply(console, ['[CGG]'].concat([].slice.call(arguments))); } catch(e){} } }
+  function ggCoinsOf(d){
+    if (!d) return 0;
+    var c = [ d.coins, d.coinCount, d.coin_count, d.coinValue,
+              d.diamondCount, d.diamond_count, d.diamondValue,
+              d.giftDetails && d.giftDetails.coins, d.giftDetails && d.giftDetails.diamondCount,
+              d.gift && d.gift.coins, d.gift && d.gift.diamond_count,
+              d.extendedGiftInfo && d.extendedGiftInfo.diamond_count ];
+    for (var i=0;i<c.length;i++){ var v=c[i]; if (typeof v==='number' && v>0) return v; }
+    return 0;
+  }
+  function ggHandleGift(d){
+    if (!GG_AUTO || !d) return;
+    var giftType = (d.giftType!=null ? d.giftType : (d.gift_type!=null ? d.gift_type : (d.giftDetails && d.giftDetails.giftType)));
+    var repeatEnd = (d.repeatEnd!=null ? d.repeatEnd : d.repeat_end);
+    // 連打タイプ(giftType===1)で連打が継続中(repeatEnd===false)の途中経過は加算しない
+    if (giftType===1 && repeatEnd===false) { ggDbg('streak in progress, skip'); return; }
+    var per = ggCoinsOf(d);
+    var rep = (d.repeatCount!=null ? d.repeatCount : (d.repeat_count!=null ? d.repeat_count : 1));
+    var add = per * rep * (GG_MULT || 1);
+    if (add > 0) {
+      gg.cur = Math.max(0, gg.cur + add);
+      ggSave(); ggRender();
+      ggDbg('gift +', add, '(per', per, 'x', rep, 'x mult', GG_MULT, ') -> total', gg.cur);
+    } else {
+      ggDbg('gift had no coin/diamond value', d);
+    }
+  }
+
+  /* ============================================================
      統合 WebSocket 受信ハンドラ
      ============================================================ */
   function handleMessage(msg){
@@ -371,7 +423,10 @@
     var ev = ('' + msg.event).toLowerCase();
     if (ev === 'timercontrol')   { applyTimerControl(msg); return; }
     if (ev === 'setgametitle')   { applyGameTitle(msg.title); return; }
+    if (ev === 'timervisible')   { applyTimerVisible(!!msg.visible); return; }
     if (ev === 'updatemessages') { applyNewMessages(msg.messages); return; }
+    // ★ TikFinity の生ギフトイベント（event名に 'gift' を含む）→ 段階目標を自動加算
+    if (ev.indexOf('gift') >= 0) { ggHandleGift(msg.data || msg); return; }
     // 累計ギフリア
     if (ev === 'goalcurrent') { gg.cur = Number(msg.value)||0; ggSave(); ggRender(); return; }
     if (ev === 'goaladd')     { gg.cur = Math.max(0, gg.cur + (Number(msg.value)||0)); ggSave(); ggRender(); return; }
@@ -409,6 +464,8 @@
     pausedMs = Number(lsGet(LS.paused)) || 0;
     if (running && (!startMs || startMs > Date.now() + 2000)) startMs = Date.now();
     render(); setInterval(render, 250);
+    // タイマー表示状態を復元(保存が無ければ既定=非表示/空欄)
+    applyTimerVisible(lsGet(LS.timerVisible) === '1');
 
     // ギフト状態の復元
     try { var gm = lsGet(LS.ggMs); if (gm) { var a = JSON.parse(gm); if (Array.isArray(a) && a.length) gg.ms = a.map(function(m){ return {v:Number(m.v)||0, ja:String(m.ja||''), en:String(m.en||'')}; }); } } catch(e){}
@@ -416,6 +473,12 @@
     var gt = lsGet(LS.ggTitle); if (gt) gg.title = gt;
     try { var si = lsGet(LS.srItems); if (si) { var b = JSON.parse(si); if (Array.isArray(b) && b.length) sr.items = b.map(function(m){ return {v:Number(m.v)||0, ja:String(m.ja||''), en:String(m.en||'')}; }); } } catch(e){}
     var st = lsGet(LS.srTitle); if (st) { try { var so = JSON.parse(st); if (so && typeof so === 'object') { sr.title = { ja: String(so.ja||sr.title.ja), en: String(so.en||sr.title.en) }; } else { sr.title.ja = String(st); } } catch(e){ sr.title.ja = String(st); } }
+    // ★ TikFinity自動加算の設定（URLパラメータ）
+    var qAuto = getQuery('ggauto'); if (qAuto !== null) GG_AUTO = (qAuto !== '0' && String(qAuto).toLowerCase() !== 'false');
+    var qMult = getQuery('mult');   if (qMult !== null && isFinite(parseFloat(qMult))) GG_MULT = parseFloat(qMult) || 1;
+    GG_DEBUG = (getQuery('debug') === '1');
+    var qCur = getQuery('ggcur');   if (qCur !== null && isFinite(parseFloat(qCur))) gg.cur = parseFloat(qCur) || 0;
+
     ggBuild(); ggRender(); srStart(); applyUiLang();
     langTimer = setInterval(langTick, 10000);
   }
@@ -425,7 +488,9 @@
   window.applyNewMessages = applyNewMessages;
   window.setGameTitle     = applyGameTitle;
   window.timerState       = function(){ return { running: running, startMs: startMs, pausedMs: pausedMs, elapsedMs: elapsed(), gameTitle: gameTitle }; };
-  window.giftState        = function(){ return { ggCur: gg.cur, ggMs: gg.ms.slice(), srItems: sr.items.slice(), lang: gLang }; };
+  window.giftState        = function(){ return { ggCur: gg.cur, ggMs: gg.ms.slice(), srItems: sr.items.slice(), lang: gLang, ggAuto: GG_AUTO, ggMult: GG_MULT }; };
+  window.ggHandleGift     = ggHandleGift;   // テスト/外部からの直接加算用
+  window.simGift          = function(coins, rep){ ggHandleGift({ event:'gift', giftType:1, repeatEnd:true, diamondCount:Number(coins)||0, repeatCount:Number(rep)||1 }); };
 
   init();
 
@@ -439,6 +504,7 @@
     running = true; pausedMs = 0; startMs = Date.now() - ((1 * 3600 + 23 * 60 + 45) * 1000);
     var dt = (demo && demo !== '1' && demo.toLowerCase() !== 'true') ? demo : 'War Thunder';
     gameTitle = dt; gameTitleEl.textContent = dt; titleBox.style.display = ''; render();
+    if (timerSec) timerSec.classList.remove('tm-hidden');   // プレビューはタイマーを表示(LSは汚さない)
     if (!lsGet(LS.ggCur)) { gg.cur = 8000; ggRender(); }   // 2段達成のプレビュー
   })();
 
